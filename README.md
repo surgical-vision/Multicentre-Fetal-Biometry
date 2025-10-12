@@ -103,11 +103,11 @@ If this dataset or code is used in your research, please cite:
 
 ## License
 
-- **Code:** Released under the [MIT License](./LICENSE-MIT).  
+- **Code:** Released under the [MIT License](./LICENSE-MIT).](https://github.com/surgical-vision/Fetal-Biometry-Dataset/blob/main/LICENSE)
   Permission is granted to use, copy, modify, and distribute the software for any purpose with attribution.  
 
 - **Data:** Released under the [Creative Commons Attribution 4.0 International (CC BY 4.0)](./LICENSE-CC-BY) license.  
-  You may share and adapt the dataset provided that appropriate credit is given.  
+  You may share and adapt the dataset, provided that appropriate credit is given.  
 
 ---
 
