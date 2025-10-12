@@ -103,8 +103,11 @@ If this dataset or code is used in your research, please cite:
 
 ## License
 
-This dataset and accompanying code are distributed under the *Creative Commons Attribution 4.0 International (CC BY 4.0)* license.
-Users may share and adapt the material provided that appropriate credit is given.
+- **Code:** Released under the [MIT License](./LICENSE-MIT).  
+  Permission is granted to use, copy, modify, and distribute the software for any purpose with attribution.  
+
+- **Data:** Released under the [Creative Commons Attribution 4.0 International (CC BY 4.0)](./LICENSE-CC-BY) license.  
+  You may share and adapt the dataset provided that appropriate credit is given.  
 
 ---
 
