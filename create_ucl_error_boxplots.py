@@ -1,6 +1,16 @@
 """
-Script to create boxplots showing the absolute error between clinically measured 
+Author: Chiara Di Vece (chiara.divece.20@ucl.ac.uk)
+Date: 2024-11-30
+
+This script creates boxplots showing the absolute error between clinically measured 
 and predicted biometry for the UCL test dataset in millimeters.
+
+It assumes that the predictions have been generated using run_all_tests.sh.
+
+Usage:
+./create_ucl_error_boxplots.sh
+
+This script should be run from the Multicentre-Fetal-Biometry repository root.
 """
 
 import pandas as pd
@@ -10,21 +20,21 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 from matplotlib import font_manager
+from pathlib import Path
+
+# Get script directory to ensure correct paths
+SCRIPT_DIR = Path(__file__).parent.resolve()
 
 # Try to use Lato font if available
 try:
     # Register Lato font if available
-    font_dirs = ['fonts/Lato']
-    font_files = []
-    for font_dir in font_dirs:
-        if os.path.exists(font_dir):
-            font_files.extend(font_manager.findSystemFonts(fontpaths=font_dir))
-    
-    for font_file in font_files:
-        if 'Lato' in font_file:
-            font_manager.fontManager.addfont(font_file)
-    
-    plt.rcParams['font.family'] = 'Lato'
+    font_dir = SCRIPT_DIR / 'fonts' / 'Lato'
+    if font_dir.exists():
+        font_files = font_manager.findSystemFonts(fontpaths=str(font_dir))
+        for font_file in font_files:
+            if 'Lato' in font_file:
+                font_manager.fontManager.addfont(font_file)
+        plt.rcParams['font.family'] = 'Lato'
 except:
     print("Lato font not found, using default font")
     pass
@@ -35,10 +45,10 @@ plt.rcParams['font.weight'] = 'bold'
 plt.rcParams['axes.labelweight'] = 'bold'
 plt.rcParams['axes.titleweight'] = 'bold'
 
-# Define paths
-base_dir = "Multicentre-Fetal-Biometry"
-data_dir = os.path.join(base_dir, "data")
-output_dir = os.path.join(base_dir, "output/FETAL")
+# Define paths relative to script location (repository root)
+base_dir = SCRIPT_DIR
+data_dir = base_dir / "data" / "annotations"
+output_dir = base_dir / "output" / "FETAL"
 
 # Define measurements and their properties
 MEASUREMENTS = {
@@ -140,7 +150,7 @@ def calculate_distance_pixels(x1, y1, x2, y2):
 def load_ucl_test_data(measurement):
     """Load UCL test data including ground truth and pixel-to-mm conversion rates."""
     csv_prefix = MEASUREMENTS[measurement]['csv_prefix']
-    test_file = os.path.join(data_dir, "UCL", f"{csv_prefix}_Test.csv")
+    test_file = data_dir / "UCL" / f"{csv_prefix}_Test.csv"
     df = pd.read_csv(test_file)
     
     return df
@@ -159,11 +169,11 @@ def load_predictions(model_name, measurement):
         return None
     
     # All models tested on UCL should have predictions_on_UCL.pth
-    pred_file = os.path.join(output_dir, model_folder, "predictions_on_UCL.pth")
+    pred_file = output_dir / model_folder / "predictions_on_UCL.pth"
     
-    if not os.path.exists(pred_file):
+    if not pred_file.exists():
         print(f"Warning: Predictions file not found: {pred_file}")
-        print(f"Run generate_ucl_predictions.sh to generate predictions on UCL test set")
+        print(f"Run run_all_tests.sh to generate predictions on UCL test set")
         return None
     
     predictions = torch.load(pred_file)
@@ -363,17 +373,17 @@ def create_boxplots():
     fig.subplots_adjust(top=0.92)
     
     # Save figure
-    output_file = os.path.join(base_dir, "ucl_error_boxplots.png")
+    output_file = base_dir / "ucl_error_boxplots.png"
     plt.savefig(output_file, dpi=300, bbox_inches='tight')
     print(f"Boxplot saved to: {output_file}")
     
     # Also save as PDF
-    output_file_pdf = os.path.join(base_dir, "ucl_error_boxplots.pdf")
+    output_file_pdf = base_dir / "ucl_error_boxplots.pdf"
     plt.savefig(output_file_pdf, bbox_inches='tight')
     print(f"Boxplot saved to: {output_file_pdf}")
 
     # Also save as SVG
-    output_file_svg = os.path.join(base_dir, "ucl_error_boxplots.svg")
+    output_file_svg = base_dir / "ucl_error_boxplots.svg"
     plt.savefig(output_file_svg, bbox_inches='tight')
     print(f"Boxplot saved to: {output_file_svg}")
     
