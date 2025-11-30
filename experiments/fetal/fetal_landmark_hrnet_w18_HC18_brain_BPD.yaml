@@ -4,9 +4,9 @@ PRINT_FREQ: 50
 
 DATASET:
   DATASET: FETAL
-  ROOT: 'data/images/HC18/Brain'
-  TRAINSET: 'data/annotations/HC18/Brain_Train.csv'
-  TESTSET: 'data/annotations/HC18/Brain_Test.csv'
+  ROOT: 'data/images/HC18/Head'
+  TRAINSET: 'data/annotations/HC18/Head_Train.csv'
+  TESTSET: 'data/annotations/HC18/Head_Test.csv'
   ANATOMY: 'brain'  
   METRICS: 'BPD'
   FLIP: true

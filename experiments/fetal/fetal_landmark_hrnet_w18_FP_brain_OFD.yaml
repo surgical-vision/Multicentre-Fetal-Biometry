@@ -4,9 +4,9 @@ PRINT_FREQ: 50
 
 DATASET:
   DATASET: FETAL
-  ROOT: 'data/images/FP/Brain'
-  TRAINSET: 'data/annotations/FP/Brain_Train.csv'
-  TESTSET: 'data/annotations/FP/Brain_Test.csv'
+  ROOT: 'data/images/FP/Head'
+  TRAINSET: 'data/annotations/FP/Head_Train.csv'
+  TESTSET: 'data/annotations/FP/Head_Test.csv'
   ANATOMY: 'brain'
   METRICS: 'OFD'
   FLIP: true

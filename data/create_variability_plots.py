@@ -50,31 +50,33 @@ metric_colors = {
 # ============================================================================
 # CONFIGURATION: Set dataset here or via environment variable
 # ============================================================================
-# DATASET = 'FP'  # Options: 'FP', 'HC18', 'UCL', 'MULTICENTRE'
-# DATASET = 'UCL'
-DATASET = 'HC18'
+# Options: 'FP', 'HC18', 'UCL', 'MULTICENTRE'
+DATASET = 'MULTICENTRE'  # Default to combined dataset
 
-# Get dataset from environment if set (for shell script use)
+# Get dataset from environment if set (for shell script or command line use)
 if 'VARIABILITY_DATASET' in os.environ:
     DATASET = os.environ['VARIABILITY_DATASET']
+
+print(f"Creating variability plots for dataset: {DATASET}")
 
 # ============================================================================
 # DATASET-SPECIFIC PATHS
 # ============================================================================
+# Note: Paths are relative to the Multicentre-Fetal-Biometry/ directory
 BASE_PATH = 'data'
 
 DATASET_CONFIGS = {
     'FP': {
-        'head_csv': f'{BASE_PATH}/FP/Head.csv',
-        'abdomen_csv': f'{BASE_PATH}/FP/Abdomen.csv',
-        'femur_csv': f'{BASE_PATH}/FP/Femur.csv',
+        'head_csv': f'{BASE_PATH}/annotations/FP/Head.csv',
+        'abdomen_csv': f'{BASE_PATH}/annotations/FP/Abdomen.csv',
+        'femur_csv': f'{BASE_PATH}/annotations/FP/Femur.csv',
         'head_imgs': f'{BASE_PATH}/images/FP/Head',
         'abdomen_imgs': f'{BASE_PATH}/images/FP/Abdomen',
-        'femur_imgs': f'{BASE_PATH}/images/FP/FL',
+        'femur_imgs': f'{BASE_PATH}/images/FP/Femur',
         'output_dir': f'{BASE_PATH}/graphs/FP'
     },
     'HC18': {
-        'head_csv': f'{BASE_PATH}/HC18/Head.csv',
+        'head_csv': f'{BASE_PATH}/annotations/HC18/Head.csv',
         'abdomen_csv': None,
         'femur_csv': None,
         'head_imgs': f'{BASE_PATH}/images/HC18/Head',
@@ -83,19 +85,19 @@ DATASET_CONFIGS = {
         'output_dir': f'{BASE_PATH}/graphs/HC18'
     },
     'UCL': {
-        'head_csv': f'{BASE_PATH}/UCL/Head.csv',
-        'abdomen_csv': f'{BASE_PATH}/UCL/Abdomen.csv',
-        'femur_csv': f'{BASE_PATH}/UCL/Femur.csv',
+        'head_csv': f'{BASE_PATH}/annotations/UCL/Head.csv',
+        'abdomen_csv': f'{BASE_PATH}/annotations/UCL/Abdomen.csv',
+        'femur_csv': f'{BASE_PATH}/annotations/UCL/Femur.csv',
         'head_imgs': f'{BASE_PATH}/images/UCL/Head',
         'abdomen_imgs': f'{BASE_PATH}/images/UCL/Abdomen',
         'femur_imgs': f'{BASE_PATH}/images/UCL/Femur',
         'output_dir': f'{BASE_PATH}/graphs/UCL'
     },
     'MULTICENTRE': {
-        'head_csv': f'{BASE_PATH}/MULTICENTRE/Head.csv',
-        'abdomen_csv': f'{BASE_PATH}/MULTICENTRE/Abdomen.csv',
-        'femur_csv': f'{BASE_PATH}/MULTICENTRE/Femur.csv',
-        'head_imgs': None,  # No images needed for plotting
+        'head_csv': f'{BASE_PATH}/annotations/MULTICENTRE/Head.csv',
+        'abdomen_csv': f'{BASE_PATH}/annotations/MULTICENTRE/Abdomen.csv',
+        'femur_csv': f'{BASE_PATH}/annotations/MULTICENTRE/Femur.csv',
+        'head_imgs': None,  # MULTICENTRE uses symlinks, no need to recalculate centers
         'abdomen_imgs': None,
         'femur_imgs': None,
         'output_dir': f'{BASE_PATH}/graphs/MULTICENTRE'
