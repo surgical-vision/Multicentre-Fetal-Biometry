@@ -35,10 +35,22 @@ All images are de-identified. Preprocessing scripts in this repository convert i
 ```plaintext
 Multicentre-Fetal-Biometry/
 ├── data/                      # Image + annotation folders (FP, HC18, UCL, MULTICENTRE)
-│   ├── FP/
-│   ├── HC18/
-│   ├── UCL/
-│   └── MULTICENTRE/
+│   ├── annotations/           # CSV files with landmark coordinates
+│   │   ├── FP/
+│   │   ├── HC18/
+│   │   ├── UCL/
+│   │   └── MULTICENTRE/
+│   ├── images/                # Ultrasound images (PNG/JPEG)
+│   │   ├── FP/
+│   │   ├── HC18/
+│   │   ├── UCL/
+│   │   └── MULTICENTRE/
+│   ├── create_variability_plots.py  # Generate variability analysis plots
+│   ├── README-FP.md           # FP dataset documentation
+│   ├── README-HC18.md         # HC18 dataset documentation
+│   ├── README-UCL.md          # UCL dataset documentation
+│   ├── README-MULTICENTRE.md  # MULTICENTRE dataset documentation
+│   └── README-general.md      # Overview of all datasets
 ├── experiments/fetal/         # Model configuration files (.yaml) for each dataset/anatomy
 ├── tools/                     # Training and testing scripts
 │   ├── train.py
@@ -51,14 +63,16 @@ Multicentre-Fetal-Biometry/
 ├── hrnetv2_pretrained/        # HRNetV2 ImageNet pretrained weights
 ├── output/                    # Training outputs (checkpoints, logs)
 ├── fonts/                     # Font files for visualization
+├── run_all_training.sh        # Automated script to train all models
+├── run_all_tests.sh           # Automated script for cross-validation testing
+├── create_ucl_error_boxplots.py  # Error analysis and visualization
 ├── environment.yml            # Conda environment specification
 ├── requirements.txt           # Additional pip requirements
-├── create_ucl_error_boxplots.py  # Error analysis scripts
 ├── analysis_reports.ipynb     # Jupyter notebook for analysis
 └── README.md
 ```
 
-- Detailed per-dataset information and annotations are in the `data/` subdirectories.
+- Detailed per-dataset information and annotations are in the `data/` subdirectories (see `data/README-*.md` files).
 
 ---
 
@@ -67,7 +81,19 @@ Multicentre-Fetal-Biometry/
 - **Images:** JPEG or PNG (depending on source dataset)  
 - **Annotations:** CSV files with landmark coordinates and metadata (plus optional VIA JSON in some cases)  
 
-See the dataset-specific READMEs for full column descriptions per anatomy.
+See the dataset-specific READMEs for full column descriptions per anatomy:
+
+- `data/README-general.md` – Overview of all datasets
+- `data/README-FP.md` – Fetal Planes dataset details
+- `data/README-HC18.md` – HC18 challenge dataset details
+- `data/README-UCL.md` – UCL dataset details
+- `data/README-MULTICENTRE.md` – Combined multi-centre dataset details
+
+Each dataset README includes:
+- Number of subjects, images, and anatomical breakdowns
+- Train/test split information
+- CSV column descriptions
+- Data acquisition details (devices, protocols)
 
 ---
 
@@ -75,7 +101,7 @@ See the dataset-specific READMEs for full column descriptions per anatomy.
 
 The dataset was benchmarked using **BiometryNet** (Avisdris *et al.*, MICCAI 2022), an HRNet-based landmark regression framework with Dynamic Orientation Determination (DOD). Results below are **Normalised Mean Error (NME) ± standard deviation**, consistent with the paper.
 
-### Brain (Head) Biometry – BPD and OFD
+### Head Biometry – BPD and OFD
 
 | Train set | Test set | NME (BPD) ± STD | NME (OFD) ± STD |
 |-----------|----------|-----------------|-----------------|
@@ -186,7 +212,7 @@ Multicentre-Fetal-Biometry/
 │       ├── FP/
 │       │   ├── Head/        # PNG images
 │       │   ├── Abdomen/     # PNG images
-│       │   └── FL/          # PNG images (femur)
+│       │   └── Femur/       # PNG images
 │       ├── HC18/
 │       │   └── Head/        # PNG images
 │       ├── UCL/
@@ -216,7 +242,22 @@ To train BiometryNet (HRNet-based landmark detector) on any dataset/anatomy comb
 python tools/train.py --cfg experiments/fetal/<CONFIG-FILE>.yaml
 ```
 
-### Examples
+### Train All Models (Automated)
+
+To train all models for all datasets and anatomies automatically:
+
+```bash
+./run_all_training.sh
+```
+
+This script will:
+- Train all models for FP, HC18, UCL, and MULTICENTRE datasets
+- Train separate models for each anatomy (head, abdomen, femur) and metric (BPD, OFD, TAD, APAD, FL)
+- Save training logs to `output/FETAL/training_logs/`
+- Clean up intermediate checkpoints to save disk space
+- Use GPU 0 by default (override with `CUDA_VISIBLE_DEVICES=1 ./run_all_training.sh`)
+
+### Examples (Individual Training)
 
 **Train on FP dataset for Head/BPD:**
 ```bash
@@ -242,7 +283,9 @@ All configuration files are in `experiments/fetal/`:
 - **UCL dataset:** `UCL_brain_BPD`, `UCL_brain_OFD`, `UCL_abdomen_TAD`, `UCL_abdomen_APAD`, `UCL_femur_FL`
 - **MULTICENTRE:** `MULTICENTRE_brain_BPD`, `MULTICENTRE_brain_OFD`, `MULTICENTRE_abdomen_TAD`, `MULTICENTRE_abdomen_APAD`, `MULTICENTRE_femur_FL`
 
-Training outputs (model checkpoints, logs) are saved to `output/<DATASET>_<ANATOMY>_<MEASUREMENT>/`.
+Training outputs (model checkpoints, logs) are saved to `output/FETAL/fetal_landmark_hrnet_w18_<DATASET>_<ANATOMY>_<MEASUREMENT>/`.
+
+**Note:** When testing a model on different datasets, predictions are saved as `predictions_on_<DATASET>.pth` to avoid overwriting results during cross-validation experiments.
 
 ---
 
@@ -254,21 +297,50 @@ To evaluate a trained model on a test set:
 python tools/test.py --cfg <CONFIG-FILE> --model-file <MODEL-WEIGHT-PATH>
 ```
 
-### Examples
+**Important**: Predictions are saved as `predictions_on_{DATASET}.pth` to avoid overwriting when testing the same model on multiple datasets.
+
+### Test All Models (Automated Cross-Validation)
+
+To run comprehensive cross-validation testing (all models on all datasets):
+
+```bash
+./run_all_tests.sh
+```
+
+This script will:
+- Test each trained model on all test sets (FP, HC18, UCL, MULTICENTRE)
+- Generate dataset-specific prediction files: `predictions_on_FP.pth`, `predictions_on_UCL.pth`, etc.
+- Compute NME metrics for each combination
+- Enable cross-domain evaluation (e.g., FP-trained model tested on UCL data)
+
+Example output structure:
+```
+output/FETAL/fetal_landmark_hrnet_w18_FP_brain_BPD/
+├── final_state.pth                # Model state after final epoch (used by run_all_tests.sh)
+├── model_best.pth                 # Best model checkpoint (lowest validation NME)
+├── predictions_on_FP.pth          # FP model tested on FP
+├── predictions_on_HC18.pth        # FP model tested on HC18
+├── predictions_on_UCL.pth         # FP model tested on UCL
+└── predictions_on_MULTICENTRE.pth # FP model tested on MULTICENTRE
+```
+
+### Examples (Individual Testing)
 
 **Test FP-trained model on FP test set (within-domain):**
 ```bash
 python tools/test.py --cfg experiments/fetal/fetal_landmark_hrnet_w18_FP_brain_BPD.yaml \
-                     --model-file output/FP_brain_BPD/model_best.pth
+                     --model-file output/FETAL/fetal_landmark_hrnet_w18_FP_brain_BPD/final_state.pth
 ```
 
 **Test FP-trained model on UCL test set (cross-domain):**
 ```bash
 python tools/test.py --cfg experiments/fetal/fetal_landmark_hrnet_w18_UCL_brain_BPD.yaml \
-                     --model-file output/FP_brain_BPD/model_best.pth
+                     --model-file output/FETAL/fetal_landmark_hrnet_w18_FP_brain_BPD/final_state.pth
 ```
 
 This reproduces the cross-domain evaluation results (e.g., FP→UCL) shown in the benchmark tables above.
+
+> **Note**: The automated testing script `run_all_tests.sh` uses `final_state.pth` by default. You can also use `model_best.pth` (best checkpoint during training) by modifying the `--model-file` argument.
 
 ### Reproduce Paper Results
 
@@ -285,22 +357,54 @@ python tools/train.py --cfg experiments/fetal/fetal_landmark_hrnet_w18_FP_brain_
 
 # Test on FP test set (within-domain)
 python tools/test.py --cfg experiments/fetal/fetal_landmark_hrnet_w18_FP_brain_BPD.yaml \
-                     --model-file output/FP_brain_BPD/model_best.pth
+                     --model-file output/FETAL/fetal_landmark_hrnet_w18_FP_brain_BPD/final_state.pth
 
 # Test on UCL test set (cross-domain)
 python tools/test.py --cfg experiments/fetal/fetal_landmark_hrnet_w18_UCL_brain_BPD.yaml \
-                     --model-file output/FP_brain_BPD/model_best.pth
+                     --model-file output/FETAL/fetal_landmark_hrnet_w18_FP_brain_BPD/final_state.pth
+```
+
+**Or use the automated scripts** to train and test all models:
+```bash
+./run_all_training.sh  # Train all models
+./run_all_tests.sh     # Test all models on all datasets (cross-validation)
 ```
 
 ---
 
 ## Variability Analysis
 
-Preprocessing scripts for image standardization and anatomical variability analysis are provided:
+Scripts for anatomical variability analysis and error visualization are provided:
 
-- **Image preprocessing:** Crop overlays, resize to 1024×1024, normalization
-- **Variability analysis:** `create_ucl_error_boxplots.py` for generating error distribution plots
-- **Augmentation:** Standard augmentation techniques applied during training
+### Generate Variability Plots
+
+```bash
+python data/create_variability_plots.py
+```
+
+This generates orientation, position, and size distribution plots for each anatomy (head, abdomen, femur) showing the variability in landmark placement across the MULTICENTRE dataset. Plots are saved to `data/variability_plots/MULTICENTRE/`.
+
+The script:
+- Analyzes landmark orientation (polar histograms)
+- Visualizes normalized landmark positions (KDE plots)
+- Shows size distributions for each measurement (histograms)
+- Supports all datasets (FP, HC18, UCL, MULTICENTRE)
+- Dynamically recalculates image centers from actual image dimensions
+
+Change the dataset by editing the `DATASET` variable in the script (default: `'MULTICENTRE'`).
+
+### Error Analysis
+
+```bash
+python create_ucl_error_boxplots.py
+```
+
+Generates boxplots showing absolute error (in millimeters) between clinically measured and predicted biometry for the UCL test dataset. This script requires predictions from `run_all_tests.sh` to be available.
+
+### Additional Tools
+
+- **Image preprocessing:** Crop overlays, resize to 1024×1024, normalization (applied automatically during training)
+- **Data augmentation:** Standard augmentation techniques (rotation, scaling, flipping) applied during training
 
 See individual scripts for detailed usage.
 

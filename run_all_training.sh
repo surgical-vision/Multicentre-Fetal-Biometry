@@ -64,11 +64,10 @@ cleanup_checkpoints() {
     echo "  Cleaning up intermediate checkpoints in $MODEL_DIR..."
     
     # Keep only these files:
-    # - checkpoint_199.pth (last epoch)
-    # - current_pred.pth
-    # - model_best.pth
-    # - final_state.pth
-    # - predictions.pth
+    # - checkpoint_199.pth (last epoch checkpoint)
+    # - current_pred.pth (predictions from last epoch)
+    # - model_best.pth (best model checkpoint - lowest validation NME)
+    # - final_state.pth (final model state - used by run_all_tests.sh)
     
     # Remove all checkpoint_*.pth except checkpoint_199.pth
     find "$MODEL_DIR" -name "checkpoint_*.pth" ! -name "checkpoint_199.pth" -type f -delete 2>/dev/null
@@ -175,11 +174,10 @@ echo "Training logs: $LOGS_DIR"
 echo ""
 echo "Intermediate checkpoints have been removed to save space."
 echo "Kept files per model:"
-echo "  - checkpoint_199.pth (last epoch)"
-echo "  - current_pred.pth"
-echo "  - model_best.pth"
-echo "  - final_state.pth"
-echo "  - predictions.pth"
+echo "  - checkpoint_199.pth (last epoch checkpoint)"
+echo "  - current_pred.pth (predictions from last epoch)"
+echo "  - model_best.pth (best checkpoint - lowest validation NME)"
+echo "  - final_state.pth (final model state - used by run_all_tests.sh)"
 echo ""
 echo "================================================================================"
 echo "TRAINING COMPLETE"
