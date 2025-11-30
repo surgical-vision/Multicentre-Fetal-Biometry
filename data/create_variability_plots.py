@@ -1,7 +1,8 @@
 """
-Create variability plots
 Author: chiaradivece
 Date: November 2025
+Description: Create variability plots for the selected dataset.
+Usage: python create_variability_plots.py
 """
 
 import pandas as pd
