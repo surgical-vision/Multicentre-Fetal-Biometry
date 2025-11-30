@@ -420,7 +420,7 @@ If this dataset or code is used in your research, please cite:
   author={Di Vece, Chiara and Mao, Zhehua and Avisdris, Netanell and Dromey, Brian and Napolitano, Raffaele and Vasconcelos, Francisco and Stoyanov, Danail and Joskowicz, Leo and Bano, Sophia},
   journal={Scientific Reports},
   year={2024},
-  note={Dataset available at [TO BE ADDEDD]}
+  note={Dataset available at [TO BE ADDED]}
 }
 ```
 
