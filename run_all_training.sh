@@ -9,6 +9,7 @@ It saves the checkpoints to the output directory, with the model name as the fil
 
 Usage:
 ./run_all_training.sh
+
 '''
 
 # GPU selection (default: GPU 0)
