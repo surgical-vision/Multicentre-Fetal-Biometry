@@ -33,19 +33,32 @@ All images are de-identified. Preprocessing scripts in this repository convert i
 ## Repository Structure  
 
 ```plaintext
-Fetal-Biometry-Dataset/ 
-├── fetalbiometrydata/         # Image + annotation folders (FP, HC18, UCL, MULTICENTRE) 
-│   ├── FP/ 
-│   ├── HC18/ 
-│   ├── UCL/ 
-│   └── MULTICENTRE/           # Derived multi-centre subset (overlapping view) 
-├── scripts/                   # Preprocessing, training, evaluation, visualization 
-├── configs/                   # Model configuration files (e.g. HRNet, BiometryNet) 
-├── env/                       # Environment/setup scripts 
+Multicentre-Fetal-Biometry/
+├── data/                      # Image + annotation folders (FP, HC18, UCL, MULTICENTRE)
+│   ├── FP/
+│   ├── HC18/
+│   ├── UCL/
+│   └── MULTICENTRE/
+├── experiments/fetal/         # Model configuration files (.yaml) for each dataset/anatomy
+├── tools/                     # Training and testing scripts
+│   ├── train.py
+│   └── test.py
+├── lib/                       # Model implementations and datasets
+│   ├── models/                # HRNet model architecture
+│   ├── datasets/              # Dataset loaders
+│   ├── core/                  # Training/evaluation functions
+│   └── utils/                 # Utility functions
+├── hrnetv2_pretrained/        # HRNetV2 ImageNet pretrained weights
+├── output/                    # Training outputs (checkpoints, logs)
+├── fonts/                     # Font files for visualization
+├── environment.yml            # Conda environment specification
+├── requirements.txt           # Additional pip requirements
+├── create_ucl_error_boxplots.py  # Error analysis scripts
+├── analysis_reports.ipynb     # Jupyter notebook for analysis
 └── README.md
 ```
 
-- Detailed per-dataset READMEs are in `fetalbiometrydata/FP/`, `HC18/`, `UCL/`, and `MULTICENTRE/`.
+- Detailed per-dataset information and annotations are in the `data/` subdirectories.
 
 ---
 
@@ -100,30 +113,196 @@ These results reproduce Table 2 in the paper and highlight:
 
 ---
 
-## Usage  
+## Installation & Setup
 
-### Clone the repository  
+### Environment Requirements
+This code is developed using Python 3.6 and PyTorch 1.0.0 on Linux with NVIDIA GPUs. The provided `environment.yml` file specifies all dependencies. Training and testing are performed using NVIDIA GPUs with CUDA-compatible PyTorch builds. The code has been tested on Ubuntu 20.04 but should work on other Linux distributions with compatible CUDA drivers.
 
-```bash
-git clone https://github.com/surgical-vision/Fetal-Biometry-Dataset
-cd Fetal-Biometry-Dataset
+### Setup Steps
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/surgical-vision/Multicentre-Fetal-Biometry
+   cd Multicentre-Fetal-Biometry
+   ```
+
+2. **Create conda environment from provided file:**
+   ```bash
+   conda env create -f environment.yml
+   conda activate fetalbiometry
+   ```
+
+   **Or install dependencies manually:**
+   ```bash
+   pip install torch==1.0.0 torchvision==0.2.1
+   pip install -r requirements.txt
+   ```
+
+3. **Download HRNetV2 pretrained weights:**
+   ```bash
+   mkdir -p hrnetv2_pretrained
+   # Download hrnetv2_w18_imagenet_pretrained.pth into this folder
+   ```
+   
+   Download pretrained model: [HRNetV2-W18 ImageNet weights](https://1drv.ms/u/s!Aus8VCZ_C_33cMkPimlmClRvmpw)
+
+### Obtain the Datasets
+
+Download the data archives from the UCL Research Data Repository (link to be added upon publication) and extract them into the `data/` directory.
+
+> **Note**: Dataset DOI and download instructions will be added upon publication.
+
+### Expected Data Structure
+
+After downloading and extracting the datasets, your directory should look like:
+
+```plaintext
+Multicentre-Fetal-Biometry/
+├── data/
+│   ├── annotations/
+│   │   ├── FP/
+│   │   │   ├── Head.csv
+│   │   │   ├── Head_Train.csv
+│   │   │   ├── Head_Test.csv
+│   │   │   ├── Abdomen.csv
+│   │   │   ├── Abdomen_Train.csv
+│   │   │   ├── Abdomen_Test.csv
+│   │   │   ├── Femur.csv
+│   │   │   ├── Femur_Train.csv
+│   │   │   └── Femur_Test.csv
+│   │   ├── HC18/
+│   │   │   ├── Head.csv
+│   │   │   ├── Head_Train.csv
+│   │   │   └── Head_Test.csv
+│   │   ├── UCL/
+│   │   │   ├── Head.csv, Head_Train.csv, Head_Test.csv
+│   │   │   ├── Abdomen.csv, Abdomen_Train.csv, Abdomen_Test.csv
+│   │   │   └── Femur.csv, Femur_Train.csv, Femur_Test.csv
+│   │   └── MULTICENTRE/
+│   │       ├── Head.csv, Head_Train.csv, Head_Test.csv
+│   │       ├── Abdomen.csv, Abdomen_Train.csv, Abdomen_Test.csv
+│   │       └── Femur.csv, Femur_Train.csv, Femur_Test.csv
+│   └── images/
+│       ├── FP/
+│       │   ├── Head/        # PNG images
+│       │   ├── Abdomen/     # PNG images
+│       │   └── FL/          # PNG images (femur)
+│       ├── HC18/
+│       │   └── Head/        # PNG images
+│       ├── UCL/
+│       │   ├── Head/        # JPEG images
+│       │   ├── Abdomen/     # JPEG images
+│       │   └── Femur/       # JPEG images
+│       └── MULTICENTRE/
+│           ├── Head/
+│           ├── Abdomen/
+│           └── Femur/
+├── experiments/fetal/       # Configuration files for each dataset/anatomy
+├── hrnetv2_pretrained/      # HRNetV2 ImageNet pretrained weights
+├── tools/
+│   ├── train.py             # Training script
+│   └── test.py              # Testing/evaluation script
+├── lib/                     # Model and dataset implementations
+└── output/                  # Training outputs (checkpoints, logs)
 ```
 
-## Obtain the datasets
+---
 
-Download the data archives from the UCL Research Data Repository (link to be added upon publication) and extract them into the `fetalbiometrydata/` directory.
+## Training Models
 
-> **TODO**: Add final DOI / URL for the UCL/open-access data repository.
+To train BiometryNet (HRNet-based landmark detector) on any dataset/anatomy combination:
 
-### Reproduce variability analysis
+```bash
+python tools/train.py --cfg experiments/fetal/<CONFIG-FILE>.yaml
+```
 
-Preprocessing scripts (e.g. cropping overlays, resizing to 1024×1024, normalisation, augmentation) and anatomical variability analysis are provided in `scripts/`. Usage examples will be added once the public release is finalised.
+### Examples
 
-### Run BiometryNet baseline
+**Train on FP dataset for Head/BPD:**
+```bash
+python tools/train.py --cfg experiments/fetal/fetal_landmark_hrnet_w18_FP_brain_BPD.yaml
+```
 
-Configuration files and scripts to run BiometryNet on FP, HC18, UCL, and multi-centre training are provided (e.g., HRNet configs in `configs/`, training scripts in `scripts/`).
+**Train on UCL dataset for Abdomen/TAD:**
+```bash
+python tools/train.py --cfg experiments/fetal/fetal_landmark_hrnet_w18_UCL_abdomen_TAD.yaml
+```
 
-> **TODO**: Add exact command-line examples for reproducing the baseline results in the paper.
+**Train on MULTICENTRE dataset for Femur/FL:**
+```bash
+python tools/train.py --cfg experiments/fetal/fetal_landmark_hrnet_w18_MULTICENTRE_femur_FL.yaml
+```
+
+### Available Configuration Files
+
+All configuration files are in `experiments/fetal/`:
+
+- **FP dataset:** `FP_brain_BPD`, `FP_brain_OFD`, `FP_abdomen_TAD`, `FP_abdomen_APAD`, `FP_femur_FL`
+- **HC18 dataset:** `HC18_brain_BPD`, `HC18_brain_OFD`
+- **UCL dataset:** `UCL_brain_BPD`, `UCL_brain_OFD`, `UCL_abdomen_TAD`, `UCL_abdomen_APAD`, `UCL_femur_FL`
+- **MULTICENTRE:** `MULTICENTRE_brain_BPD`, `MULTICENTRE_brain_OFD`, `MULTICENTRE_abdomen_TAD`, `MULTICENTRE_abdomen_APAD`, `MULTICENTRE_femur_FL`
+
+Training outputs (model checkpoints, logs) are saved to `output/<DATASET>_<ANATOMY>_<MEASUREMENT>/`.
+
+---
+
+## Testing & Evaluation
+
+To evaluate a trained model on a test set:
+
+```bash
+python tools/test.py --cfg <CONFIG-FILE> --model-file <MODEL-WEIGHT-PATH>
+```
+
+### Examples
+
+**Test FP-trained model on FP test set (within-domain):**
+```bash
+python tools/test.py --cfg experiments/fetal/fetal_landmark_hrnet_w18_FP_brain_BPD.yaml \
+                     --model-file output/FP_brain_BPD/model_best.pth
+```
+
+**Test FP-trained model on UCL test set (cross-domain):**
+```bash
+python tools/test.py --cfg experiments/fetal/fetal_landmark_hrnet_w18_UCL_brain_BPD.yaml \
+                     --model-file output/FP_brain_BPD/model_best.pth
+```
+
+This reproduces the cross-domain evaluation results (e.g., FP→UCL) shown in the benchmark tables above.
+
+### Reproduce Paper Results
+
+To reproduce the benchmark results in Table 2 of the paper:
+
+1. Train models on each dataset (FP, HC18, UCL) for each anatomy/measurement
+2. Evaluate each trained model on all test sets (within-domain and cross-domain)
+3. The test script computes Normalised Mean Error (NME) automatically
+
+Example workflow for Head/BPD:
+```bash
+# Train on FP
+python tools/train.py --cfg experiments/fetal/fetal_landmark_hrnet_w18_FP_brain_BPD.yaml
+
+# Test on FP test set (within-domain)
+python tools/test.py --cfg experiments/fetal/fetal_landmark_hrnet_w18_FP_brain_BPD.yaml \
+                     --model-file output/FP_brain_BPD/model_best.pth
+
+# Test on UCL test set (cross-domain)
+python tools/test.py --cfg experiments/fetal/fetal_landmark_hrnet_w18_UCL_brain_BPD.yaml \
+                     --model-file output/FP_brain_BPD/model_best.pth
+```
+
+---
+
+## Variability Analysis
+
+Preprocessing scripts for image standardization and anatomical variability analysis are provided:
+
+- **Image preprocessing:** Crop overlays, resize to 1024×1024, normalization
+- **Variability analysis:** `create_ucl_error_boxplots.py` for generating error distribution plots
+- **Augmentation:** Standard augmentation techniques applied during training
+
+See individual scripts for detailed usage.
 
 ---
 
@@ -131,7 +310,48 @@ Configuration files and scripts to run BiometryNet on FP, HC18, UCL, and multi-c
 
 If this dataset or code is used in your research, please cite:
 
-> **TODO**: Add reference
+```bibtex
+@article{divece2024fetal,
+  title={A benchmark multi-centre multi-device dataset for landmark-based comprehensive fetal biometry},
+  author={Di Vece, Chiara and Mao, Zhehua and Avisdris, Netanell and Dromey, Brian and Napolitano, Raffaele and Vasconcelos, Francisco and Stoyanov, Danail and Joskowicz, Leo and Bano, Sophia},
+  journal={Scientific Reports},
+  year={2024},
+  note={Dataset available at https://github.com/surgical-vision/Fetal-Biometry-Dataset}
+}
+```
+
+---
+
+## Acknowledgments
+
+This implementation builds on [HRNet for Facial Landmark Detection](https://github.com/HRNet/HRNet-Facial-Landmark-Detection), adapted for fetal biometry landmark regression. The HRNet architecture was originally developed for human pose estimation:
+
+```bibtex
+@inproceedings{SunXLW19,
+  title={Deep High-Resolution Representation Learning for Human Pose Estimation},
+  author={Ke Sun and Bin Xiao and Dong Liu and Jingdong Wang},
+  booktitle={CVPR},
+  year={2019}
+}
+
+@article{WangSCJDZLMTWLX19,
+  title={Deep High-Resolution Representation Learning for Visual Recognition},
+  author={Jingdong Wang and Ke Sun and Tianheng Cheng and Borui Jiang and Chaorui Deng and Yang Zhao and Dong Liu and Yadong Mu and Mingkui Tan and Xinggang Wang and Wenyu Liu and Bin Xiao},
+  journal={TPAMI},
+  year={2019}
+}
+```
+
+The BiometryNet framework with Dynamic Orientation Determination (DOD) is described in:
+
+```bibtex
+@inproceedings{avisdris2022biometrynet,
+  title={BiometryNet: Landmark-based Fetal Biometry Estimation from Standard Ultrasound Planes},
+  author={Avisdris, Netanell and Di Vece, Chiara and Yaqub, Mohammad and Napolitano, Raffaele and Papageorghiou, Aris T. and Noble, J. Alison and Joskowicz, Leo},
+  booktitle={MICCAI},
+  year={2022}
+}
+```
 
 ---
 
