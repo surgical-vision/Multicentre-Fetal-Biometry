@@ -20,22 +20,19 @@ The repository is organised into three **primary subsets** (as described in the 
 
 ```
 fetalbiometrydata/
-├── FP/                  # Full Protocol dataset (1,904 subjects, 2,159 images)
+├── FP/                  # Full Protocol dataset (1,047 subjects, 3,091 images)
 │   ├── annotations/     # Landmark annotations (CSV format)
 │   └── data/           # Ultrasound images (PNG format)
-├── HC18/               # Head Circumference 2018 challenge (551 subjects, 999 images)
+├── HC18/               # Head Circumference 2018 challenge (806 subjects, 999 images)
 │   ├── annotations/     # Landmark annotations (CSV format)
 │   └── data/           # Ultrasound images (PNG format)
-├── Multi-centre/        # Multi-centre dataset (148 subjects, 613 images)
+├── MULTICENTRE/        # Multi-centre combined dataset (1,904 subjects, 4,517 images)
 │   ├── annotations/     # Landmark annotations (CSV format)
 │   └── data/           # Ultrasound images (JPEG/PNG format)
-└── UCL/                # UCL dataset (205 subjects, 746 images)
+└── UCL/                # UCL dataset (51 subjects, 427 images)
     ├── annotations/     # Landmark annotations (CSV format)
     └── data/           # Ultrasound images (JPEG format)
 ```
-
-⚠️ **Important**:  
-The **Multi-centre** subset is a *derived convenience view* built from FP, HC18, and UCL. It does **not** add new images or subjects beyond the 4,517 images and 1,904 subjects reported in the paper. It should not be counted as a fourth independent dataset when quoting totals.
 
 ### Dataset Characteristics (Paper Values)
 
@@ -43,18 +40,15 @@ Primary subsets (as used in the Scientific Reports paper):
 
 | Dataset   | Sites      | Devices (examples)                               | Subjects | Images | Anatomies             |
 |----------|------------|---------------------------------------------------|----------|--------|------------------------|
-| **FP**   | 2 (Spain)  | GE Voluson E6/S8/S10, Aloka Prosound             | 1,047    | 3,091  | Head, Abdomen, Femur  |
-| **HC18** | 1 (NL)     | GE Voluson E8/730                                | 806      | 999    | Head only             |
-| **UCL**  | 1 (UK)     | GE Voluson (single institutional protocol)       | 51       | 427    | Head, Abdomen, Femur  |
-| **Ours (combined)** | 3 | 7 device types                                | 1,904    | 4,517  | All above             |
+| **FP**   | 2 (Spain)  | GE Voluson E6/S8/S10, Aloka Prosound             | 1,047    | 3,091  | Head (1,638), Abdomen (693), Femur (760)  |
+| **HC18** | 1 (NL)     | GE Voluson E8/730                                | 806      | 999    | Head only (999)             |
+| **UCL**  | 1 (UK)     | GE Voluson (single institutional protocol)       | 51       | 427    | Head (161), Abdomen (131), Femur (135)  |
+| **MULTICENTRE (combined)** | 3 | 7 device types                         | 1,904    | 4,517  | Head (2,798), Abdomen (825), Femur (895)             |
 
-Derived convenience subset:
+⚠️ **Important**:  
+The **MULTICENTRE** dataset is the complete combined dataset containing all images from FP, HC18, and UCL. It represents the full **4,517 images** and **1,904 unique subjects** reported in the paper.
 
-| Dataset        | Notes                                             | Subjects | Images | Anatomies             |
-|----------------|---------------------------------------------------|----------|--------|------------------------|
-| **Multi-centre**| Subset drawn from FP, HC18, and UCL (overlapping) | 148      | 613    | Head, Abdomen, Femur  |
-
-**Total (unique)**: 3 clinical sites, 7 device types, **1,904** unique subjects, **4,517** images.
+**Total**: 3 clinical sites, 7 device types, **1,904** unique subjects, **4,517** images.
 
 ## Data Organization
 
