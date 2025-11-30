@@ -2,6 +2,7 @@
 # Copyright (c) Microsoft
 # Licensed under the MIT License.
 # Created by Tianheng Cheng(tianhengcheng@gmail.com)
+# Modified by Netanell Avisdris and Chiara Di Vece (chiara.divece.20@ucl.ac.uk)
 # ------------------------------------------------------------------------------
 
 import os
@@ -23,7 +24,7 @@ from lib.core import function
 
 def parse_args():
 
-    parser = argparse.ArgumentParser(description='Train Face Alignment')
+    parser = argparse.ArgumentParser(description='Test Fetal Biometry Landmark Detection')
 
     parser.add_argument('--cfg', help='experiment configuration filename',
                         required=True, type=str)
@@ -35,7 +36,12 @@ def parse_args():
 
 
 def main():
-
+    """
+    Main testing/inference loop for fetal biometry landmark detection.
+    
+    Loads a trained model and runs inference on the test set,
+    computing evaluation metrics and saving predictions.
+    """
     args = parse_args()
 
     logger, final_output_dir, tb_log_dir = \
@@ -55,7 +61,6 @@ def main():
 
     gpus = list(config.GPUS)
     model = nn.DataParallel(model, device_ids=gpus).cuda()
-    # model.cuda()
 
     # load model
     state_dict = torch.load(args.model_file)

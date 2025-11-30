@@ -2,6 +2,7 @@
 # Copyright (c) Microsoft
 # Licensed under the MIT License.
 # Created by Tianheng Cheng(tianhengcheng@gmail.com), Yang Zhao
+# Modified by Netanell Avisdris and Chiara Di Vece (chiara.divece.20@ucl.ac.uk)
 # ------------------------------------------------------------------------------
 
 import os
@@ -19,9 +20,25 @@ from sklearn.mixture import GaussianMixture
 
 from ..utils.transforms import fliplr_joints, crop, generate_target, transform_pixel
 
-curidx = 0
 
 class FetalLandmarks(data.Dataset):
+    """
+    PyTorch Dataset for fetal biometry landmark detection.
+    
+    Loads ultrasound images and corresponding anatomical landmark annotations
+    for training and evaluation of landmark detection models. Supports multiple
+    anatomies (brain/head, abdomen, femur) and metrics (BPD, OFD, TAD, APAD, FL).
+    
+    Args:
+        cfg: Configuration object containing dataset and model parameters
+        is_train (bool): Whether this is training data (applies augmentation)
+        transform: Optional transform to be applied on samples (not currently used)
+    
+    Attributes:
+        anatomy: Type of anatomy ('brain', 'abdomen', 'femur')
+        metrics: Type of measurement ('BPD', 'OFD', 'TAD', 'APAD', 'FL')
+        reassign: Whether to apply landmark reassignment based on learned direction
+    """
 
     def __init__(self, cfg, is_train=True, transform=None):
         # specify annotation file for dataset
@@ -110,8 +127,18 @@ class FetalLandmarks(data.Dataset):
         return len(self.landmarks_frame)
 
     def __getitem__(self, idx):
+        """
+        Get a single sample from the dataset.
         
-        # idx += 1
+        Args:
+            idx (int): Index of the sample to retrieve
+            
+        Returns:
+            tuple: (img, target, meta) where:
+                - img: Preprocessed and normalized image tensor (3, H, W)
+                - target: Heatmap target tensor (num_landmarks, H_out, W_out)
+                - meta: Dictionary containing metadata (index, center, scale, pts, tpts)
+        """
         
         image_path = os.path.join(self.data_root,
                                   self.landmarks_frame.iloc[idx, 0])
@@ -143,14 +170,8 @@ class FetalLandmarks(data.Dataset):
         else:
             raise ValueError(f"Anatomy {self.anatomy} not supported")
         
-        # pts = pts[[1,0,3,2]] # For Netanell: this is wrong
         pts = pts.astype('float').reshape(-1, 2)
 
-        # # Clip the points 
-        # pts = np.clip(pts, a_min=0, a_max=None)
-
-        # print(f'pts: {pts}')
-        
         scale *= 1.7
         nparts = pts.shape[0]
         img = np.array(Image.open(image_path).convert('RGB'), dtype=np.float32)
@@ -175,36 +196,24 @@ class FetalLandmarks(data.Dataset):
             if tpts[i, 1] >= 0:
                 tpts[i, 0:2] = transform_pixel(tpts[i, 0:2]+1, center,
                                                scale, self.output_size, rot=r)
-                # print(f'tpts[i, 0:2]: {tpts[i, 0:2]}')
                 target[i] = generate_target(target[i], tpts[i]-1, self.sigma,
                                             label_type=self.label_type)
             else:
-                print ("ERROR HERE!!!!!")
+                raise ValueError(f"Invalid landmark coordinate at index {i}: {tpts[i]}")
         
-        # TODO: Remove
+        # Reassign landmarks based on learned direction (if enabled during training)
         if self.is_train:
-            if self.reassign :
-                # if tpts[0,0] > tpts[1,0]:
-                #     # print ('Right')
-                #     pass
-                # else:
-                #     # print('Left')
-                #     tmp = tpts[0, :].copy()
-                #     tpts[0, :] = tpts[1, :]
-                #     tpts[1, :] = tmp
+            if self.reassign:
                 tpts = classify_direction(tpts, self.d_vect)
                 tpts = tpts.reshape(-1, 2)
                 target = np.zeros((nparts, self.output_size[0], self.output_size[1])) 
                 for i in range(nparts):
                     target[i] = generate_target(target[i], tpts[i] - 1, self.sigma,
                                                 label_type=self.label_type)
+        
         img = img.astype(np.float32)
 
-        newimg = img.copy()
-        newimg[:, :, 1] = cv2.resize(target[0]*255, (256, 256), interpolation=cv2.INTER_LINEAR)
-        newimg[:, :, 2] = cv2.resize(target[1]*255, (256, 256), interpolation=cv2.INTER_LINEAR)
-        newimg = cv2.cvtColor(newimg, cv2.COLOR_RGB2BGR)  # Convert back to BGR for saving
-        globals()["curidx"] = curidx + 1
+        # Normalize image
         img = (img / 255.0 - self.mean) / self.std
         img = img.transpose([2, 0, 1])
         target = torch.Tensor(target)
@@ -216,30 +225,52 @@ class FetalLandmarks(data.Dataset):
 
         return img, target, meta
 
-def determine_direction(pts_arr, do_plot = True):
+def determine_direction(pts_arr, do_plot=True):
+    """
+    Determine landmark direction using Gaussian Mixture Model.
+    
+    Args:
+        pts_arr: Array of landmark points
+        do_plot: If True, save diagnostic plot to 'plots/' directory
+    
+    Returns:
+        GMM cluster means representing landmark direction
+    """
     if np.isnan(pts_arr).any():
-        print("The array contains NaN values.")
-    else:
-        print("The array does not contain any NaN values.")
-    nan_positions = np.argwhere(np.isnan(pts_arr))
-    print("NaN positions:", nan_positions)
-    nan_count = np.isnan(pts_arr).sum()
-    print(f"Number of NaN values in the array: {nan_count}")
+        print("Warning: The array contains NaN values.")
+        nan_positions = np.argwhere(np.isnan(pts_arr))
+        nan_count = np.isnan(pts_arr).sum()
+        print(f"NaN positions: {nan_positions}")
+        print(f"Number of NaN values: {nan_count}")
+    
     gmm = GaussianMixture(n_components=2)
     gmm.fit(pts_arr)
-    if  do_plot:
-        plt.scatter(pts_arr[::2,0], pts_arr[::2,1], alpha=1)
-        plt.scatter(pts_arr[1::2,0], pts_arr[1::2,1], color='r', alpha=1)
-        plt.plot(gmm.means_[:,0], gmm.means_[:,1], color='k')
-        # save plot
+    
+    if do_plot:
+        plt.scatter(pts_arr[::2, 0], pts_arr[::2, 1], alpha=1)
+        plt.scatter(pts_arr[1::2, 0], pts_arr[1::2, 1], color='r', alpha=1)
+        plt.plot(gmm.means_[:, 0], gmm.means_[:, 1], color='k')
+        # Save diagnostic plot (requires 'plots/' directory to exist)
+        os.makedirs('plots', exist_ok=True)
         plt.savefig('plots/fetal_landmark_hrnet_w18_determine_direction_plots.png', dpi=600)
+        plt.close()
     
     return gmm.means_
 
 def classify_direction(pts_arr, d_pts):
-    d_vector = d_pts[1,:] - d_pts[0,:]
+    """
+    Classify and reorder landmark points based on learned direction.
+    
+    Args:
+        pts_arr: Array of landmark points to classify
+        d_pts: Direction vector from GMM cluster means
+    
+    Returns:
+        Reordered landmark points consistent with learned direction
+    """
+    d_vector = d_pts[1, :] - d_pts[0, :]
     ap = pts_arr
-    pt_part1 = np.dot(d_vector[np.newaxis,:], ap.T) / np.linalg.norm(d_vector)
+    pt_part1 = np.dot(d_vector[np.newaxis, :], ap.T) / np.linalg.norm(d_vector)
     pts_class = pt_part1.flatten()
     pts_class = pts_class.reshape(-1, 2)
     pts_class = np.stack((np.argmin(pts_class, axis=1), np.argmax(pts_class, axis=1)), axis=1)

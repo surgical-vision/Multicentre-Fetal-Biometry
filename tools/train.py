@@ -2,6 +2,7 @@
 # Copyright (c) Microsoft
 # Licensed under the MIT License.
 # Created by Tianheng Cheng(tianhengcheng@gmail.com)
+# Modified by Netanell Avisdris and Chiara Di Vece (chiara.divece.20@ucl.ac.uk)
 # ------------------------------------------------------------------------------
 
 import os
@@ -33,7 +34,7 @@ import torch.nn.functional as F
 
 def parse_args():
 
-    parser = argparse.ArgumentParser(description='Train Face Alignment')
+    parser = argparse.ArgumentParser(description='Train Fetal Biometry Landmark Detection')
 
     parser.add_argument('--cfg', help='experiment configuration filename',
                         required=True, type=str)
@@ -43,6 +44,16 @@ def parse_args():
     return args
 
 def FuseLoss(output, target):
+    """
+    Fused loss combining per-landmark MSE with summed heatmap MSE.
+    
+    Args:
+        output: Predicted heatmaps
+        target: Ground truth heatmaps
+    
+    Returns:
+        Combined loss value
+    """
     output_fl = torch.sum(output, axis=1)
     target_fl = torch.sum(target, axis=1)
 
@@ -50,13 +61,28 @@ def FuseLoss(output, target):
 
 
 def FuseLossV2(output, target):
+    """
+    Fused loss V2 with weighted combination (0.5 weight on summed heatmap).
+    
+    Args:
+        output: Predicted heatmaps
+        target: Ground truth heatmaps
+    
+    Returns:
+        Combined loss value with adjusted weighting
+    """
     output_fl = torch.sum(output, axis=1)
     target_fl = torch.sum(target, axis=1)
 
     return F.mse_loss(output, target, reduction='mean') + 0.5*F.mse_loss(output_fl, target_fl, reduction='mean')
 
 def main():
-
+    """
+    Main training loop for fetal biometry landmark detection.
+    
+    Loads configuration, initializes model and optimizer, and runs training
+    with validation. Saves checkpoints and logs metrics to tensorboard.
+    """
     args = parse_args()
 
     logger, final_output_dir, tb_log_dir = \
@@ -169,10 +195,6 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
 
 
 

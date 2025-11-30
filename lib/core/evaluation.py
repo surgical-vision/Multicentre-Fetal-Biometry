@@ -2,6 +2,7 @@
 # Copyright (c) Microsoft
 # Licensed under the MIT License.
 # Created by Tianheng Cheng(tianhengcheng@gmail.com), Yang Zhao
+# Modified by Netanell Avisdris and Chiara Di Vece (chiara.divece.20@ucl.ac.uk)
 # ------------------------------------------------------------------------------
 
 import math
@@ -34,7 +35,19 @@ def get_preds(scores):
 
 
 def compute_nme(preds, meta):
-
+    """
+    Compute Normalized Mean Error (NME) for landmark predictions.
+    
+    NME normalizes the landmark error by the inter-landmark distance,
+    making it scale-invariant and comparable across different image sizes.
+    
+    Args:
+        preds: Predicted landmark coordinates, shape (N, L, 2)
+        meta: Dictionary containing ground truth landmarks ('pts')
+    
+    Returns:
+        numpy.ndarray: NME values for each sample, shape (N,)
+    """
     targets = meta['pts']
     preds = preds.numpy()
     target = targets.cpu().numpy()
@@ -64,7 +77,19 @@ def compute_nme(preds, meta):
 
 
 def compute_l1dist(preds, meta):
-
+    """
+    Compute L1 distance error between predicted and ground truth measurements.
+    
+    For fetal biometry, this computes the absolute difference between the
+    predicted and ground truth inter-landmark distances (e.g., BPD, OFD values).
+    
+    Args:
+        preds: Predicted landmark coordinates, shape (N, L, 2)
+        meta: Dictionary containing ground truth landmarks ('pts')
+    
+    Returns:
+        numpy.ndarray: L1 distance errors for each sample, shape (N,)
+    """
     targets = meta['pts']
     preds = preds.numpy()
     target = targets.cpu().numpy()
@@ -85,6 +110,21 @@ def compute_l1dist(preds, meta):
     return rmse
 
 def decode_preds(output, center, scale, res):
+    """
+    Decode heatmap predictions to landmark coordinates.
+    
+    Converts network output heatmaps to landmark coordinates in the original
+    image space, applying sub-pixel refinement and inverse transformation.
+    
+    Args:
+        output: Network output heatmaps, shape (N, L, H, W)
+        center: Image center coordinates for each sample
+        scale: Scale factor for each sample
+        res: Heatmap resolution [H, W]
+    
+    Returns:
+        torch.Tensor: Predicted landmarks in original image space, shape (N, L, 2)
+    """
     coords = get_preds(output)  # float type
 
     coords = coords.cpu()
