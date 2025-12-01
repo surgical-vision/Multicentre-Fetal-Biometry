@@ -2,60 +2,60 @@
 
 ## Overview
 
-The MULTICENTRE dataset is the **complete combined dataset** containing all images from the three primary datasets (FP, HC18, UCL). It contains **4,517 ultrasound images** from **1,904 unique subjects** acquired at **three clinical sites** using **seven different ultrasound devices**.
+The MULTICENTRE dataset is the **complete combined dataset** containing all images from the three primary datasets (FP, HC18, UCL). It contains **4,513 ultrasound images** from **1,904 unique subjects** acquired at **three clinical sites** using **seven different ultrasound devices**.
 
 This combined dataset represents the full multi-centre, multi-device benchmark described in the paper and is designed for experiments on cross-site generalization, domain adaptation, and robustness evaluation.
 
 ⚠️ **Important**:  
-The MULTICENTRE dataset contains **all** images from FP, HC18, and UCL combined. The individual datasets (FP, HC18, UCL) are subsets of MULTICENTRE, not separate additions. The total unique count is **1,904 subjects** and **4,517 images** as reported in the paper (Table 3).
+The MULTICENTRE dataset contains **all** images from FP, HC18, and UCL combined. The individual datasets (FP, HC18, UCL) are subsets of MULTICENTRE, not separate additions. The total unique count is **1,904 subjects** and **4,513 images** (4 fewer than originally reported due to removal of images with missing metric coordinates).
 
 ## Dataset Characteristics
 
 - **Number of subjects**: 1,904
-- **Number of images**: 4,517  
-- **Clinical sites**: 3 (Barcelona, Netherlands, London)  
+- **Number of images**: 4,513  
+- **Clinical sites**: 3 (Spain, Netherlands, United Kingdom)  
 - **Ultrasound devices**:
   - GE Voluson series (E6, E8, S8, S10, 730)
   - Aloka Prosound
   - Other institutional devices
 - **Anatomies covered**: Head, Abdomen, Femur  
-- **Image format**: JPEG and PNG  
+- **Image format**: JPEG, JPG, and PNG  
 
-Per-anatomy image counts (as reported in Table 3 of the paper):
+Per-anatomy image counts:
 
-| Anatomy | Total Images |
-|---------|--------------|
-| Head    | 2,798        |
-| Abdomen | 825          |
-| Femur   | 895          |
-| **Total** | **4,517**  |
+| Anatomy | Total Images | Train | Test |
+|---------|--------------|-------|------|
+| Head    | 2,795        | 1,604 | 1,191 |
+| Abdomen | 823          | 662   | 161   |
+| Femur   | 895          | 533   | 362   |
+| **Total** | **4,513**  | **2,799** | **1,714** |
 
 ### Breakdown by source dataset:
 
 | Source | Head | Abdomen | Femur | Total |
 |--------|------|---------|-------|-------|
-| FP     | 1,638 | 693    | 760   | 3,091 |
+| FP     | 1,637 | 693    | 760   | 3,090 |
 | HC18   | 999  | -      | -     | 999   |
-| UCL    | 161  | 131    | 135   | 427   |
-| **MULTICENTRE** | **2,798** | **825** | **895** | **4,517** |
+| UCL    | 159  | 130    | 135   | 424   |
+| **MULTICENTRE** | **2,795** | **823** | **895** | **4,513** |
 
 ## Directory Structure
 
 ```
 MULTICENTRE/
 ├── annotations/
-│   ├── Head.csv          # Complete head annotations (2,798 images)
-│   ├── Head_Train.csv    # Training split
-│   ├── Head_Test.csv     # Test split
-│   ├── Abdomen.csv       # Complete abdomen annotations (825 images)
+│   ├── Head.csv          # Complete head annotations (2,795 images)
+│   ├── Head_Train.csv    # Training split (1,604 images)
+│   ├── Head_Test.csv     # Test split (1,191 images)
+│   ├── Abdomen.csv       # Complete abdomen annotations (823 images)
 │   ├── Abdomen_Train.csv # Training split
 │   ├── Abdomen_Test.csv  # Test split
 │   ├── Femur.csv         # Complete femur annotations (895 images)
 │   ├── Femur_Train.csv   # Training split
 │   └── Femur_Test.csv    # Test split
 └── data/
-    ├── Head/             # Head ultrasound images (2,798 images)
-    ├── Abdomen/          # Abdomen ultrasound images (825 images)
+    ├── Head/             # Head ultrasound images (2,795 images)
+    ├── Abdomen/          # Abdomen ultrasound images (823 images)
     └── Femur/            # Femur ultrasound images (895 images)
 ```
 
@@ -236,9 +236,9 @@ The MULTICENTRE dataset is the complete union of the following source datasets:
 
 | Dataset     | Subjects | Images | Anatomies             |
 |-------------|----------|--------|------------------------|
-| FP          | 1,047    | 3,091  | Head (1,638), Abdomen (693), Femur (760)  |
+| FP          | 1,047    | 3,090  | Head (1,637), Abdomen (693), Femur (760)  |
 | HC18        | 806      | 999    | Head only (999)             |
-| UCL         | 51       | 427    | Head (161), Abdomen (131), Femur (135)  |
-| **MULTICENTRE** | **1,904** | **4,517** | **Head (2,798), Abdomen (825), Femur (895)** |
+| UCL         | 51       | 424    | Head (159), Abdomen (130), Femur (135)  |
+| **MULTICENTRE** | **1,904** | **4,513** | **Head (2,795), Abdomen (823), Femur (895)** |
 
-⚠️ **Important**: The individual datasets (FP, HC18, UCL) are **subsets** of MULTICENTRE, not additional datasets. The total unique count is **1,904 subjects** and **4,517 images** as reported in the paper.
+⚠️ **Important**: The individual datasets (FP, HC18, UCL) are **subsets** of MULTICENTRE, not additional datasets. The total unique count is **1,904 subjects** and **4,513 images** (4 fewer than originally reported due to removal of images with missing metric coordinates).

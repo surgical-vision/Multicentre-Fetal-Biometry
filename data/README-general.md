@@ -4,7 +4,7 @@ This repository contains a comprehensive, multi-centre, multi-device benchmark d
 
 ## Overview
 
-The dataset contains **4,517 de-identified ultrasound images** from **1,904 unique subjects** acquired at **three clinical sites** using **seven different ultrasound devices**. Expert anatomical landmark annotations are provided for clinically used fetal biometric measurements.
+The dataset contains **4,513 de-identified ultrasound images** from **1,904 unique subjects** acquired at **three clinical sites** using **seven different ultrasound devices**. Expert anatomical landmark annotations are provided for clinically used fetal biometric measurements.
 
 ### Biometric Measurements
 
@@ -20,18 +20,18 @@ The repository is organised into three **primary subsets** (as described in the 
 
 ```
 fetalbiometrydata/
-├── FP/                  # Full Protocol dataset (1,047 subjects, 3,091 images)
+├── FP/                  # Full Protocol dataset (1,047 subjects, 3,090 images)
 │   ├── annotations/     # Landmark annotations (CSV format)
 │   └── data/           # Ultrasound images (PNG format)
 ├── HC18/               # Head Circumference 2018 challenge (806 subjects, 999 images)
 │   ├── annotations/     # Landmark annotations (CSV format)
 │   └── data/           # Ultrasound images (PNG format)
-├── MULTICENTRE/        # Multi-centre combined dataset (1,904 subjects, 4,517 images)
+├── MULTICENTRE/        # Multi-centre combined dataset (1,904 subjects, 4,513 images)
 │   ├── annotations/     # Landmark annotations (CSV format)
-│   └── data/           # Ultrasound images (JPEG/PNG format)
-└── UCL/                # UCL dataset (51 subjects, 427 images)
+│   └── data/           # Ultrasound images (JPEG/JPG/PNG format)
+└── UCL/                # UCL dataset (51 subjects, 424 images)
     ├── annotations/     # Landmark annotations (CSV format)
-    └── data/           # Ultrasound images (JPEG format)
+    └── data/           # Ultrasound images (JPEG/JPG/PNG format)
 ```
 
 ### Dataset Characteristics (Paper Values)
@@ -40,15 +40,15 @@ Primary subsets (as used in the Scientific Reports paper):
 
 | Dataset   | Sites      | Devices (examples)                               | Subjects | Images | Anatomies             |
 |----------|------------|---------------------------------------------------|----------|--------|------------------------|
-| **FP**   | 2 (Spain)  | GE Voluson E6/S8/S10, Aloka Prosound             | 1,047    | 3,091  | Head (1,638), Abdomen (693), Femur (760)  |
+| **FP**   | 2 (Spain)  | GE Voluson E6/S8/S10, Aloka Prosound             | 1,047    | 3,090  | Head (1,637), Abdomen (693), Femur (760)  |
 | **HC18** | 1 (NL)     | GE Voluson E8/730                                | 806      | 999    | Head only (999)             |
-| **UCL**  | 1 (UK)     | GE Voluson (single institutional protocol)       | 51       | 427    | Head (161), Abdomen (131), Femur (135)  |
-| **MULTICENTRE (combined)** | 3 | 7 device types                         | 1,904    | 4,517  | Head (2,798), Abdomen (825), Femur (895)             |
+| **UCL**  | 1 (UK)     | GE Voluson (single institutional protocol)       | 51       | 424    | Head (159), Abdomen (130), Femur (135)  |
+| **MULTICENTRE (combined)** | 3 | 7 device types                         | 1,904    | 4,513  | Head (2,795), Abdomen (823), Femur (895)             |
 
 ⚠️ **Important**:  
-The **MULTICENTRE** dataset is the complete combined dataset containing all images from FP, HC18, and UCL. It represents the full **4,517 images** and **1,904 unique subjects** reported in the paper.
+The **MULTICENTRE** dataset is the complete combined dataset containing all images from FP, HC18, and UCL. It represents the full **4,513 images** and **1,904 unique subjects** (4 fewer images than originally reported due to removal of images with missing metric coordinates).
 
-**Total**: 3 clinical sites, 7 device types, **1,904** unique subjects, **4,517** images.
+**Total**: 3 clinical sites, 7 device types, **1,904** unique subjects, **4,513** images.
 
 ## Data Organization
 
@@ -73,11 +73,11 @@ Image files are organised by anatomy type inside each dataset folder:
 - **HC18**:  
   - `HC18/data/Head/[ID]_HC.png` or `[ID]_[N]HC.png`
 - **UCL**:  
-  - `UCL/data/Head/[filename].jpeg`  
-  - `UCL/data/Abdomen/[filename].jpeg`  
-  - `UCL/data/Femur/[filename].jpeg`
+  - `UCL/data/Head/[filename].[jpeg|jpg|png]` (15 Head images converted from PNG to JPG to avoid HC18 conflicts)
+  - `UCL/data/Abdomen/[filename].[jpeg|png]`  
+  - `UCL/data/Femur/[filename].[jpeg|png]`
 - **Multi-centre**:  
-  - `Multi-centre/data/[Anatomy]/[filename].[jpeg|png]` (mixed naming from FP/HC18/UCL)
+  - `Multi-centre/data/[Anatomy]/[filename].[jpeg|jpg|png]` (mixed naming from FP/HC18/UCL)
 
 ### CSV Annotation Format
 

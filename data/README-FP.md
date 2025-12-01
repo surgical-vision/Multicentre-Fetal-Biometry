@@ -2,13 +2,13 @@
 
 ## Overview
 
-The Fetal Planes (FP) dataset is the largest subset in this collection, containing **3,091 ultrasound images** from **1,047 unique subjects**, as used in the paper. The dataset was acquired at two clinical sites in Barcelona using multiple ultrasound devices, and provides coverage of all major fetal biometric measurements on standard planes.
+The Fetal Planes (FP) dataset is the largest subset in this collection, containing **3,090 ultrasound images** from **1,047 unique subjects**. The dataset was acquired at two clinical sites in Barcelona using multiple ultrasound devices, and provides coverage of all major fetal biometric measurements on standard planes.
 
 ## Dataset Characteristics
 
 - **Number of subjects**: 1,047
-- **Number of images**: 3,091  
-- **Clinical sites**: 2 (Vall d’Hebron and Hospital Sant Joan de Déu, Barcelona)
+- **Number of images**: 3,090  
+- **Clinical sites**: 2 (Vall d'Hebron and Hospital Sant Joan de Déu, Barcelona)
 - **Ultrasound devices**:
   - GE Voluson E6 (three scanners)
   - GE Voluson S8
@@ -17,11 +17,11 @@ The Fetal Planes (FP) dataset is the largest subset in this collection, containi
 - **Anatomies covered**: Head, Abdomen, Femur
 - **Image format**: PNG
 
-Per-anatomy image counts (as reported in the paper):
+Per-anatomy image counts:
 
-- **Head**: 1,638 images  
-- **Abdomen**: 693 images  
-- **Femur**: 760 images  
+- **Head**: 1,637 images (Train: 757, Test: 880)
+- **Abdomen**: 693 images (Train: 568, Test: 125)
+- **Femur**: 760 images (Train: 437, Test: 323)  
 
 ## Directory Structure
 
@@ -139,15 +139,13 @@ The FP dataset is provided with **subject-disjoint** train/test splits for each 
 - `Abdomen_Train.csv`, `Abdomen_Test.csv`  
 - `Femur_Train.csv`, `Femur_Test.csv`  
 
-The total number of images per anatomy matches the values reported in the paper:
+The total number of images per anatomy:
 
-| Anatomy | Total Images |
-|---------|--------------|
-| Head    | 1,638        |
-| Abdomen | 693          |
-| Femur   | 760          |
-
-For exact train/test image counts, please refer to the corresponding `*_Train.csv` and `*_Test.csv` files.
+| Anatomy | Total Images | Train | Test |
+|---------|--------------|-------|------|
+| Head    | 1,637        | 757   | 880  |
+| Abdomen | 693          | 568   | 125  |
+| Femur   | 760          | 437   | 323  |
 
 ## Clinical Relevance
 

@@ -150,7 +150,7 @@ def calculate_distance_pixels(x1, y1, x2, y2):
 def load_ucl_test_data(measurement):
     """Load UCL test data including ground truth and pixel-to-mm conversion rates."""
     csv_prefix = MEASUREMENTS[measurement]['csv_prefix']
-    test_file = data_dir / "UCL" / f"{csv_prefix}_Test.csv"
+    test_file = data_dir / "UCL" / "px_to_mm" / f"{csv_prefix}_Test.csv"
     df = pd.read_csv(test_file)
     
     return df

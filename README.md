@@ -17,9 +17,9 @@ The dataset combines ultrasound images from **three independent sources** acquir
 
 | Dataset | Source / Institution | Subjects | Images | Anatomical Planes | Devices | Annotation Tool |
 |--------|----------------------|---------:|-------:|-------------------|---------|-----------------|
-| **Fetal Planes (FP)** | Vall d’Hebron & Sant Joan de Déu, Barcelona, Spain | 1,047 | 3,091 | Head (1,638), Abdomen (693), Femur (760) | GE Voluson E6/S8/S10, Aloka | VIA (manual landmarks) |
+| **Fetal Planes (FP)** | Vall d'Hebron & Sant Joan de Déu, Barcelona, Spain | 1,047 | 3,090 | Head (1,637), Abdomen (693), Femur (760) | GE Voluson E6/S8/S10, Aloka | VIA (manual landmarks) |
 | **HC18** | Radboud University Medical Center, Netherlands | 806 | 999 | Head only | GE Voluson E8, 730 | Ellipse fitting from HC masks |
-| **UCL** | University College London Hospital (UCLH), UK | 51 | 427 | Head (161), Abdomen (131), Femur (135) | GE Voluson | VIA (manual landmarks) |
+| **UCL** | University College London Hospital (UCLH), UK | 51 | 424 | Head (159), Abdomen (130), Femur (135) | GE Voluson | VIA (manual landmarks) |
 
 Each dataset includes 2D ultrasound standard planes and corresponding landmark annotations for:  
 - **Head:** biparietal diameter (BPD), occipito-frontal diameter (OFD)  
@@ -216,9 +216,9 @@ Multicentre-Fetal-Biometry/
 │       ├── HC18/
 │       │   └── Head/        # PNG images
 │       ├── UCL/
-│       │   ├── Head/        # JPEG images
-│       │   ├── Abdomen/     # JPEG images
-│       │   └── Femur/       # JPEG images
+│       │   ├── Head/        # JPEG/JPG images 
+│       │   ├── Abdomen/     # JPEG/PNG images
+│       │   └── Femur/       # JPEG/PNG images
 │       └── MULTICENTRE/
 │           ├── Head/
 │           ├── Abdomen/

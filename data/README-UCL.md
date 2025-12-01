@@ -2,23 +2,23 @@
 
 ## Overview
 
-The UCL dataset consists of a curated subset of **427 ultrasound images** from **51 pregnancies** acquired at University College London Hospital (UCLH). This dataset provides fetal biometry measurements on standard planes with expert landmark annotations from a single clinical site.
+The UCL dataset consists of a curated subset of **424 ultrasound images** from **51 pregnancies** acquired at University College London Hospital (UCLH). This dataset provides fetal biometry measurements on standard planes with expert landmark annotations from a single clinical site.
 
 ## Dataset Characteristics
 
 - **Number of pregnancies**: 51  
-- **Number of images**: 427  
+- **Number of images**: 424  
 - **Clinical sites**: 1 (University College London Hospital)  
 - **Ultrasound devices**:
   - GE Voluson series (single institutional protocol)
 - **Anatomies covered**: Head, Abdomen, Femur  
-- **Image format**: JPG or JPEG
+- **Image format**: JPEG, JPG, PNG 
 
-Per-anatomy image counts (as reported in the paper):
+Per-anatomy image counts:
 
-- **Head**: 161 images  
-- **Abdomen**: 131 images  
-- **Femur**: 135 images  
+- **Head**: 159 images (Train: 110, Test: 49)
+- **Abdomen**: 130 images (Train: 94, Test: 36)
+- **Femur**: 135 images (Train: 96, Test: 39)  
 
 ## Directory Structure
 
@@ -33,12 +33,34 @@ UCL/
 │   ├── Abdomen_Test.csv  # Test split
 │   ├── Femur.csv         # Complete femur annotations
 │   ├── Femur_Train.csv   # Training split
-│   └── Femur_Test.csv    # Test split
+│   ├── Femur_Test.csv    # Test split
+│   └── px_to_mm/         # Subset with pixel-to-mm conversion rates (for error analysis)
+│       ├── Head.csv, Head_Train.csv, Head_Test.csv
+│       ├── Abdomen.csv, Abdomen_Train.csv, Abdomen_Test.csv
+│       └── Femur.csv, Femur_Train.csv, Femur_Test.csv
 └── data/
-    ├── Head/             # Head ultrasound images (JPEG)
-    ├── Abdomen/          # Abdomen ultrasound images (JPEG)
-    └── Femur/            # Femur ultrasound images (JPEG)
+    ├── Head/             # Head ultrasound images (JPEG/JPG/PNG)
+    ├── Abdomen/          # Abdomen ultrasound images (JPEG/PNG)
+    └── Femur/            # Femur ultrasound images (JPEG/PNG)
 ```
+
+### Pixel-to-Millimeter Conversion Data
+
+The `px_to_mm/` subfolder contains a subset of the UCL dataset annotations that include the `px_to_mm_rate` column. This column provides the conversion factor from pixel measurements to millimeters for each image, enabling absolute error analysis in clinical units (mm).
+
+**Key characteristics:**
+- Contains images where pixel-to-millimeter calibration information was available
+- Includes all the same landmark coordinates as the main annotation files
+- Used specifically for error analysis scripts (e.g., `create_ucl_error_boxplots.py`)
+- **Not required for model training or testing** - the main annotation files (without `px_to_mm_rate`) are sufficient for landmark detection
+
+**Counts:**
+- **Head**: 126 images (Train: 91, Test: 35)
+- **Abdomen**: 99 images (Train: 77, Test: 22)
+- **Femur**: 107 images (Train: 82, Test: 25)
+
+These files enable quantitative evaluation of predicted biometric measurements against ground truth clinical measurements in millimeters, as shown in the error analysis boxplots in the paper.
+
 ## Image Naming Convention
 
 Images in the UCL datase follow a simplified naming pattern:
@@ -140,15 +162,13 @@ The `px_to_mm_rate` and `mm_dist` fields (when available) support conversion fro
 
 The UCL dataset is split into training and test sets with **subject-disjoint** partitioning for each anatomy. Split assignments are encoded in the `Split` column and in the corresponding `*_Train.csv` and `*_Test.csv` files.
 
-The total number of images per anatomy matches the values reported in the paper:
+The total number of images per anatomy:
 
-| Anatomy | Total Images |
-|---------|--------------|
-| Head    | 161          |
-| Abdomen | 131          |
-| Femur   | 135          |
-
-For exact train/test counts, please refer to the corresponding CSV files (`Head_Train.csv`, `Head_Test.csv`, etc.).
+| Anatomy | Total Images | Train | Test |
+|---------|--------------|-------|------|
+| Head    | 159          | 110   | 49   |
+| Abdomen | 130          | 94    | 36   |
+| Femur   | 135          | 96    | 39   |
 
 ⚠️ **Important**:
 
@@ -216,10 +236,10 @@ The dataset includes acquisitions from operators with varying levels of experien
 |----------------|------------------|-------------------------|-----------------------|
 | Site           | 1 (UCLH)         | 2 (Barcelona)           | 1 (Netherlands)       |
 | Devices        | GE Voluson       | GE Voluson + Aloka      | GE Voluson E8/730     |
-| Images         | 427              | 3,091                   | 999                   |
+| Images         | 424              | 3,090                   | 999                   |
 | Pregnancies    | 51               | 1,047                   | 806                   |
 | Anatomies      | Head, Abdomen, Femur | Head, Abdomen, Femur | Head only             |
-| Format         | JPEG             | PNG                     | PNG                   |
+| Format         | JPEG/JPG/PNG     | PNG                     | PNG                   |
 | Operator info  | Yes              | No                      | No                    |
 
 ## Ethical Considerations
