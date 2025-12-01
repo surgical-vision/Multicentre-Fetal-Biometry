@@ -207,6 +207,7 @@ __marimo__/
 
 # HRNet specific
 data/images/
+data/annotations/
 output
 log
 hrnetv2_pretrained/
