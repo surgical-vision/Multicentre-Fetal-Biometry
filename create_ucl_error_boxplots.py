@@ -8,7 +8,7 @@ and predicted biometry for the UCL test dataset in millimeters.
 It assumes that the predictions have been generated using run_all_tests.sh.
 
 Usage:
-./create_ucl_error_boxplots.sh
+python create_ucl_error_boxplots.py
 
 This script should be run from the Multicentre-Fetal-Biometry repository root.
 """
