@@ -283,10 +283,18 @@ os.makedirs(config['output_dir'], exist_ok=True)
 output_png = os.path.join(config['output_dir'], f'{DATASET}_variability.png')
 output_svg = os.path.join(config['output_dir'], f'{DATASET}_variability.svg')
 
-plt.savefig(output_png, dpi=600)
-plt.savefig(output_svg, dpi=600)
+plt.savefig(output_svg, format='svg')  # SVG works fine
 
-print(f"\n✓ Saved: {output_png}")
+# Try PNG, fallback to PDF if it fails
+try:
+    plt.savefig(output_png, dpi=150, format='png')
+    print(f"\n✓ Saved: {output_png}")
+except Exception as e:
+    print(f"\n✗ PNG failed: {type(e).__name__}")
+    output_pdf = output_png.replace('.png', '.pdf')
+    plt.savefig(output_pdf, format='pdf')
+    print(f"✓ Saved: {output_pdf} (PNG unavailable due to Pillow issue)")
+
 print(f"✓ Saved: {output_svg}")
 
 plt.close()
