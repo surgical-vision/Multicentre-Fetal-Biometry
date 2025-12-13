@@ -212,6 +212,7 @@ data/graphs/
 data/*.md
 output
 log
+plots/
 hrnetv2_pretrained/
 *.swp
 *.out
