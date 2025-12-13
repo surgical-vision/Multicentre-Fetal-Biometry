@@ -208,6 +208,7 @@ __marimo__/
 # HRNet specific
 data/images/
 data/annotations/
+data/graphs/
 data/*.md
 output
 log
