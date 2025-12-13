@@ -1,5 +1,5 @@
 """
-Author: chiaradivece
+Author: Chiara Di Vece (chiara.divece.20@ucl.ac.uk)
 Date: November 2025
 Description: Create variability plots for the selected dataset.
 Usage:
