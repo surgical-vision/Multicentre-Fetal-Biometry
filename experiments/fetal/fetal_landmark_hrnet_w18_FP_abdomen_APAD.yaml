@@ -13,6 +13,7 @@ DATASET:
   FLIP: true
   SCALE_FACTOR: 0.25 
   ROT_FACTOR: 30 
+MODEL:
   NAME: 'hrnet'
   NUM_JOINTS: 2
   INIT_WEIGHTS: true
