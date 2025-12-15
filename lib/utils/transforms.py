@@ -2,6 +2,8 @@
 # Copyright (c) Microsoft
 # Licensed under the MIT License.
 # Created by Tianheng Cheng(tianhengcheng@gmail.com), Yang Zhao
+
+# Modified by Chiara Di Vece (chiara.divece.20@ucl.ac.uk)
 # ------------------------------------------------------------------------------
 import cv2
 import torch
@@ -31,7 +33,19 @@ MATCHED_PARTS = {
 
 def fliplr_joints(x, width, dataset='aflw'):
     """
-    flip coords
+    Flip landmark coordinates horizontally and swap matched pairs.
+    
+    When an image is flipped horizontally, landmarks on the left and right sides
+    need to be swapped to maintain correct anatomical correspondence.
+    
+    Args:
+        x: Landmark coordinates [num_landmarks, 2] (x, y)
+        width: Image width (for computing flipped x coordinates)
+        dataset: Dataset name ('aflw', '300W', 'COFW', 'WFLW', 'FETAL')
+                 Determines which landmark pairs to swap
+    
+    Returns:
+        np.ndarray: Flipped and swapped landmark coordinates [num_landmarks, 2]
     """
     matched_parts = MATCHED_PARTS[dataset]
     # Flip horizontal
@@ -48,7 +62,6 @@ def fliplr_joints(x, width, dataset='aflw'):
             x[pair[0] - 1, :] = x[pair[1] - 1, :]
             x[pair[1] - 1, :] = tmp
     return x
-
 
 def get_3rd_point(a, b):
     direct = a - b
@@ -68,6 +81,26 @@ def get_dir(src_point, rot_rad):
 def get_affine_transform(
         center, scale, rot, output_size,
         shift=np.array([0, 0], dtype=np.float32), inv=0):
+    """
+    Compute affine transformation matrix for image cropping/rotation.
+    
+    This function generates a 2x3 affine transformation matrix that:
+    - Centers the image at the specified center point
+    - Scales the image by the specified scale factor
+    - Rotates the image by the specified angle (in degrees)
+    - Outputs to the specified output size
+    
+    Args:
+        center: Center point [x, y] in original image coordinates
+        scale: Scale factor (typically relative to 200 pixels)
+        rot: Rotation angle in degrees
+        output_size: Output image size [width, height]
+        shift: Additional translation shift [x, y] (default: [0, 0])
+        inv: If 1, compute inverse transformation (default: 0)
+    
+    Returns:
+        np.ndarray: 2x3 affine transformation matrix
+    """
     if not isinstance(scale, np.ndarray) and not isinstance(scale, list):
         print(scale)
         scale = np.array([scale, scale])
@@ -141,7 +174,23 @@ def get_transform(center, scale, output_size, rot=0):
 
 
 def transform_pixel(pt, center, scale, output_size, invert=0, rot=0):
-    # Transform pixel location to different reference
+    """
+    Transform a pixel coordinate between image space and heatmap/cropped space.
+    
+    This function applies the same affine transformation (scaling, rotation, translation)
+    that is applied to the image, ensuring landmark coordinates remain aligned.
+    
+    Args:
+        pt: Pixel coordinate [x, y] (1-indexed)
+        center: Center point [x, y] in original image coordinates
+        scale: Scale factor
+        output_size: Output image/heatmap size [width, height]
+        invert: If 1, apply inverse transformation (default: 0)
+        rot: Rotation angle in degrees (default: 0)
+    
+    Returns:
+        np.ndarray: Transformed pixel coordinate [x, y] (1-indexed)
+    """
     t = get_transform(center, scale, output_size, rot=rot)
     if invert:
         t = np.linalg.inv(t)
@@ -158,7 +207,23 @@ def transform_preds(coords, center, scale, output_size):
 
 
 def crop(img, center, scale, output_size, rot=0):
+    """
+    Crop and optionally rotate an image around a center point.
     
+    This function crops a region from the input image centered at the specified
+    point, scales it, and optionally rotates it. It handles edge cases and
+    includes padding for rotations to ensure no information is lost.
+    
+    Args:
+        img: Input image [H, W] or [H, W, C] (numpy array)
+        center: Center point [x, y] for cropping
+        scale: Scale factor (relative to 200 pixels)
+        output_size: Output image size [height, width]
+        rot: Rotation angle in degrees (default: 0)
+    
+    Returns:
+        np.ndarray: Cropped (and optionally rotated) image [output_size[0], output_size[1], C]
+    """
     center_new = center.clone()
 
     # Preprocessing for efficient cropping
@@ -207,9 +272,6 @@ def crop(img, center, scale, output_size, rot=0):
 
     if not rot == 0:
         # Remove padding
-    #     new_img = scipy.misc.imrotate(new_img, rot)
-    #     new_img = new_img[pad:-pad, pad:-pad]
-        # center_tuple = (new_img.shape[1] / 2, new_img.shape[0] / 2)
         center_tuple = (new_img.shape[0] / 2, new_img.shape[1] / 2)
         # Create the rotation matrix
         rotation_matrix = cv2.getRotationMatrix2D(center_tuple, rot, scale=1.0)
@@ -218,12 +280,26 @@ def crop(img, center, scale, output_size, rot=0):
         new_img = new_img[pad:-pad, pad:-pad]
 
     new_img = cv2.resize(new_img, (output_size[1], output_size[0]), interpolation=cv2.INTER_LINEAR)
-    # new_img = scipy.misc.imresize(new_img, output_size)
+
     return new_img
 
 
 def generate_target(img, pt, sigma, label_type='Gaussian'):
-    # Check that any part of the gaussian is in-bounds
+    """
+    Generate a heatmap target for a landmark location.
+    
+    Creates a 2D heatmap with a peak at the landmark location. The heatmap
+    can be either Gaussian or a different distribution based on label_type.
+    
+    Args:
+        img: Output heatmap image [H, W] (will be modified in-place)
+        pt: Landmark location [x, y] in heatmap coordinates
+        sigma: Standard deviation (for Gaussian) or scale parameter
+        label_type: Type of heatmap ('Gaussian' or other)
+    
+    Returns:
+        np.ndarray: Modified heatmap image with peak at landmark location
+    """
     tmp_size = sigma * 3
     ul = [int(pt[0] - tmp_size), int(pt[1] - tmp_size)]
     br = [int(pt[0] + tmp_size + 1), int(pt[1] + tmp_size + 1)]

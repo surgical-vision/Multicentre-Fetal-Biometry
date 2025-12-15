@@ -21,7 +21,12 @@ logger = logging.getLogger(__name__)
 
 
 class AverageMeter(object):
-    """Computes and stores the average and current value"""
+    """
+    Computes and stores the average and current value of a metric.
+    
+    This is a utility class for tracking metrics during training/validation,
+    such as loss, NME, or processing time.
+    """
     def __init__(self):
         self.val = 0
         self.avg = 0
@@ -36,6 +41,13 @@ class AverageMeter(object):
         self.count = 0
 
     def update(self, val, n=1):
+        """
+        Update the meter with a new value.
+        
+        Args:
+            val: Current value to record
+            n: Number of samples this value represents (default: 1)
+        """
         self.val = val
         self.sum += val * n
         self.count += n
@@ -82,15 +94,16 @@ def train(config, train_loader, model, critertion, optimizer,
 
         loss = critertion(output, target) #+ critertion(output_fl, target_fl)
 
-        # NME
+        # Compute evaluation metrics (NME and L1 distance)
         score_map = output.data.cpu()
         preds = decode_preds(score_map, meta['center'], meta['scale'], [64, 64])
 
+        # Normalized Mean Error (NME) - direction-invariant for fetal biometry
         nme_batch = compute_nme(preds, meta)
         nme_batch_sum = nme_batch_sum + np.sum(nme_batch)
         nme_count = nme_count + preds.size(0)
 
-        # Calculate average L1 difference
+        # L1 distance - absolute difference between predicted and GT measurements
         l1_batch = compute_l1dist(preds, meta)
         l1_batch_sum = l1_batch_sum + np.sum(l1_batch)
         l1_count = l1_count + preds.size(0)
@@ -169,13 +182,17 @@ def validate(config, val_loader, model, criterion, epoch, writer_dict):
             target = target.cuda(non_blocking=True)
 
             score_map = output.data.cpu()
-            # loss
+            # Compute loss
             loss = criterion(output, target)
 
+            # Decode predictions from heatmaps to image coordinates
             preds = decode_preds(score_map, meta['center'], meta['scale'], [64, 64])
-            # NME
+            
+            # Compute Normalized Mean Error (NME)
             nme_temp = compute_nme(preds, meta)
-            # Failure Rate under different threshold
+            
+            # Calculate failure rates at different NME thresholds
+            # These thresholds indicate poor predictions (8% and 10% NME)
             failure_008 = (nme_temp > 0.08).sum()
             failure_010 = (nme_temp > 0.10).sum()
             count_failure_008 += failure_008

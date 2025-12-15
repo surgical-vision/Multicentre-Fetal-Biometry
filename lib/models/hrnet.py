@@ -4,6 +4,17 @@
 # Create by Bin Xiao (Bin.Xiao@microsoft.com)
 # Modified by Tianheng Cheng(tianhengcheng@gmail.com), Yang Zhao
 # ------------------------------------------------------------------------------
+"""
+High-Resolution Network (HRNet) for Landmark Detection.
+
+This module implements HRNet, a high-resolution network architecture designed
+for dense prediction tasks like landmark detection. HRNet maintains high-resolution
+representations throughout the network by connecting high-to-low resolution
+subnetworks in parallel and repeatedly exchanging information across resolutions.
+
+The network is used for fetal biometry landmark detection, predicting heatmaps
+for landmark locations in ultrasound images.
+"""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -23,12 +34,28 @@ logger = logging.getLogger(__name__)
 
 
 def conv3x3(in_planes, out_planes, stride=1):
-    """3x3 convolution with padding"""
+    """
+    3x3 convolution with padding.
+    
+    Args:
+        in_planes: Number of input channels
+        out_planes: Number of output channels
+        stride: Convolution stride (default: 1)
+    
+    Returns:
+        nn.Conv2d: 3x3 convolutional layer
+    """
     return nn.Conv2d(in_planes, out_planes, kernel_size=3,
                      stride=stride, padding=1, bias=False)
 
 
 class BasicBlock(nn.Module):
+    """
+    Basic residual block for HRNet.
+    
+    This is a standard ResNet-style residual block with two 3x3 convolutions
+    and a skip connection. Used as the building block in HRNet branches.
+    """
     expansion = 1
 
     def __init__(self, inplanes, planes, stride=1, downsample=None):
@@ -253,6 +280,19 @@ blocks_dict = {
 
 
 class HighResolutionNet(nn.Module):
+    """
+    High-Resolution Network (HRNet) for landmark detection.
+    
+    HRNet maintains high-resolution representations throughout the network by:
+    1. Starting with a high-resolution subnetwork
+    2. Gradually adding high-to-low resolution subnetworks
+    3. Repeatedly fusing multi-resolution representations
+    
+    The network outputs heatmaps for landmark locations, with one heatmap per landmark.
+    
+    Args:
+        config: Configuration object containing model architecture parameters
+    """
 
     def __init__(self, config, **kwargs):
         self.inplanes = 64
@@ -469,8 +509,21 @@ class HighResolutionNet(nn.Module):
 
 
 def get_face_alignment_net(config, **kwargs):
-
+    """
+    Create and initialize HRNet model for landmark detection.
+    
+    This function creates an HRNet model (named 'face_alignment_net' for historical
+    reasons, but used for fetal biometry landmark detection) and initializes its weights.
+    
+    Args:
+        config: Configuration object containing model parameters
+        **kwargs: Additional keyword arguments passed to HighResolutionNet
+    
+    Returns:
+        HighResolutionNet: Initialized HRNet model
+    """
     model = HighResolutionNet(config, **kwargs)
+    # Load pretrained weights if specified and initialization is enabled
     pretrained = config.MODEL.PRETRAINED if config.MODEL.INIT_WEIGHTS else ''
     model.init_weights(pretrained=pretrained)
 

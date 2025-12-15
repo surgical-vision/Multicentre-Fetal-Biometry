@@ -6,17 +6,23 @@
 # ------------------------------------------------------------------------------
 
 import math
-
 import torch
 import numpy as np
-
 from ..utils.transforms import transform_preds
-
 
 def get_preds(scores):
     """
-    get predictions from score maps in torch Tensor
-    return type: torch.LongTensor
+    Extract landmark predictions from heatmap score maps.
+    
+    Finds the location of maximum activation in each heatmap channel,
+    which corresponds to the predicted landmark location.
+    
+    Args:
+        scores: Heatmap score maps [batch, num_joints, H, W]
+    
+    Returns:
+        torch.Tensor: Predicted landmark coordinates [batch, num_joints, 2]
+                     in heatmap space (1-indexed)
     """
     assert scores.dim() == 4, 'Score maps should be 4-dim'
     maxval, idx = torch.max(scores.view(scores.size(0), scores.size(1), -1), 2)
@@ -36,17 +42,24 @@ def get_preds(scores):
 
 def compute_nme(preds, meta):
     """
-    Compute Normalized Mean Error (NME) for landmark predictions.
+    Compute Normalized Mean Error (NME) with Direction Invariance for Fetal Biometry.
     
-    NME normalizes the landmark error by the inter-landmark distance,
-    making it scale-invariant and comparable across different image sizes.
+    NME is computed as the average Euclidean distance between predicted and ground truth
+    landmarks, normalized by a reference distance (interocular distance for face datasets,
+    or the distance between the two landmarks for fetal biometry).
+    
+    For fetal biometry (2 landmarks), the metric is made direction-invariant by computing
+    both standard and swapped errors and taking the minimum. This handles cases where
+    landmark identities might be flipped.
     
     Args:
-        preds: Predicted landmark coordinates, shape (N, L, 2)
-        meta: Dictionary containing ground truth landmarks ('pts')
+        preds: Predicted landmark coordinates [N, L, 2] where N is batch size, L is num landmarks
+        meta: Dictionary containing:
+            - 'pts': Ground truth landmarks [N, L, 2]
+            - 'box_size': (for AFLW dataset) bounding box size
     
     Returns:
-        numpy.ndarray: NME values for each sample, shape (N,)
+        np.ndarray: NME values for each sample in the batch [N]
     """
     targets = meta['pts']
     preds = preds.numpy()
@@ -58,37 +71,57 @@ def compute_nme(preds, meta):
 
     for i in range(N):
         pts_pred, pts_gt = preds[i, ], target[i, ]
+        
+        # --- Normalization Factor ---
         if L == 19:  # aflw
             interocular = meta['box_size'][i]
         elif L == 29:  # cofw
             interocular = np.linalg.norm(pts_gt[8, ] - pts_gt[9, ])
         elif L == 68:  # 300w
-            # interocular
             interocular = np.linalg.norm(pts_gt[36, ] - pts_gt[45, ])
         elif L == 98:
             interocular = np.linalg.norm(pts_gt[60, ] - pts_gt[72, ])
-        elif L == 2: #Fetal
+        elif L == 2: # Fetal Biometry (Diameter)
+            # Distance between the two Ground Truth points
             interocular = np.linalg.norm(pts_gt[0, ] - pts_gt[1, ])
         else:
             raise ValueError('Number of landmarks is wrong')
-        rmse[i] = np.sum(np.linalg.norm(pts_pred - pts_gt, axis=1)) / (interocular * L)
+
+        # --- Error Calculation ---
+        if L == 2:
+            # Calculate Standard Error (1->1, 2->2)
+            dist_standard = np.linalg.norm(pts_pred[0] - pts_gt[0]) + \
+                            np.linalg.norm(pts_pred[1] - pts_gt[1])
+            
+            # Calculate Swapped Error (1->2, 2->1)
+            # This makes the metric invariant to left/right flipping
+            dist_swapped = np.linalg.norm(pts_pred[0] - pts_gt[1]) + \
+                           np.linalg.norm(pts_pred[1] - pts_gt[0])
+            
+            # Use the minimum distance (Best Match)
+            rmse[i] = min(dist_standard, dist_swapped) / (interocular * L)
+        else:
+            # Standard calculation for face datasets
+            rmse[i] = np.sum(np.linalg.norm(pts_pred - pts_gt, axis=1)) / (interocular * L)
 
     return rmse
 
 
 def compute_l1dist(preds, meta):
     """
-    Compute L1 distance error between predicted and ground truth measurements.
+    Compute L1 distance (absolute difference) between predicted and ground truth measurements.
     
-    For fetal biometry, this computes the absolute difference between the
-    predicted and ground truth inter-landmark distances (e.g., BPD, OFD values).
+    For fetal biometry, this computes the absolute difference between the predicted
+    and ground truth diameters/lengths. This metric is naturally direction-invariant
+    since it compares lengths rather than individual landmark positions.
     
     Args:
-        preds: Predicted landmark coordinates, shape (N, L, 2)
-        meta: Dictionary containing ground truth landmarks ('pts')
+        preds: Predicted landmark coordinates [N, L, 2]
+        meta: Dictionary containing:
+            - 'pts': Ground truth landmarks [N, L, 2]
     
     Returns:
-        numpy.ndarray: L1 distance errors for each sample, shape (N,)
+        np.ndarray: L1 distance values for each sample [N] (in pixels)
     """
     targets = meta['pts']
     preds = preds.numpy()
@@ -101,49 +134,62 @@ def compute_l1dist(preds, meta):
     for i in range(N):
         pts_pred, pts_gt = preds[i, ], target[i, ]
 
-        if L == 2: #Fetal
+        if L == 2:  # Fetal biometry (2 landmarks per measurement)
+            # L1 is naturally invariant because it compares length vs length
+            # Compute ground truth measurement length
             interocular = np.linalg.norm(pts_gt[0, ] - pts_gt[1, ])
+            # Compute predicted measurement length
+            pred_length = np.linalg.norm(pts_pred[0, ] - pts_pred[1, ])
+            # Absolute difference
+            rmse[i] = np.abs(interocular - pred_length)
         else:
             raise ValueError('Number of landmarks is wrong')
-        rmse[i] = np.abs(np.linalg.norm(pts_gt[0,] - pts_gt[1,]) - np.linalg.norm(pts_pred[0,] - pts_pred[1,]))
 
     return rmse
 
 def decode_preds(output, center, scale, res):
     """
-    Decode heatmap predictions to landmark coordinates.
+    Decode landmark predictions from heatmaps to original image coordinates.
     
-    Converts network output heatmaps to landmark coordinates in the original
-    image space, applying sub-pixel refinement and inverse transformation.
+    This function:
+    1. Extracts peak locations from heatmaps
+    2. Refines predictions using sub-pixel localization (checking neighboring pixels)
+    3. Transforms coordinates from heatmap space back to original image space
     
     Args:
-        output: Network output heatmaps, shape (N, L, H, W)
-        center: Image center coordinates for each sample
-        scale: Scale factor for each sample
-        res: Heatmap resolution [H, W]
+        output: Heatmap predictions [batch, num_joints, H, W]
+        center: Center coordinates for each image [batch, 2]
+        scale: Scale factors for each image [batch]
+        res: Resolution of heatmaps [H, W]
     
     Returns:
-        torch.Tensor: Predicted landmarks in original image space, shape (N, L, 2)
+        torch.Tensor: Predicted landmarks in original image coordinates [batch, num_joints, 2]
     """
-    coords = get_preds(output)  # float type
+    coords = get_preds(output)  # Get initial predictions from heatmaps (float type)
 
     coords = coords.cpu()
-    # pose-processing
+    # Sub-pixel refinement: check neighboring pixels to refine landmark location
+    # This improves accuracy by using gradient information from the heatmap
     for n in range(coords.size(0)):
         for p in range(coords.size(1)):
             hm = output[n][p]
             px = int(math.floor(coords[n][p][0]))
             py = int(math.floor(coords[n][p][1]))
+            # Check if within valid bounds
             if (px > 1) and (px < res[0]) and (py > 1) and (py < res[1]):
+                # Compute gradient from neighboring pixels
                 diff = torch.Tensor([hm[py - 1][px] - hm[py - 1][px - 2], hm[py][px - 1]-hm[py - 2][px - 1]])
+                # Adjust prediction by 0.25 pixels in the direction of higher activation
                 coords[n][p] += diff.sign() * .25
-    coords += 0.5
+    coords += 0.5  # Convert from 1-indexed to 0-indexed
+    
     preds = coords.clone()
 
-    # Transform back
+    # Transform predictions from heatmap space back to original image space
     for i in range(coords.size(0)):
         preds[i] = transform_preds(coords[i], center[i], scale[i], res)
 
+    # Ensure correct dimensionality
     if preds.dim() < 3:
         preds = preds.view(1, preds.size())
 
