@@ -1,16 +1,30 @@
 #!/bin/bash
-
-'''
-Author: Chiara Di Vece (chiara.divece.20@ucl.ac.uk)
-Date: 2024-11-19    
-
-This script trains all models for all anatomical structures and datasets.
-It saves the checkpoints to the output directory, with the model name as the filename.
-
-Usage:
-./run_all_training.sh
-
-'''
+# ------------------------------------------------------------------------------
+# Author: Chiara Di Vece (chiara.divece.20@ucl.ac.uk)
+# Date: 2025-12-09
+# ------------------------------------------------------------------------------
+# This script trains all models for all anatomical structures and datasets.
+#
+# It performs comprehensive training by:
+# 1. Training models for each dataset (FP, UCL, MULTICENTRE, HC18 for brain)
+# 2. Training models for each anatomical structure (brain, abdomen, femur)
+# 3. Training models for each metric (BPD, OFD, TAD, APAD, FL)
+# 4. Cleaning up intermediate checkpoints to save disk space
+# 5. Logging training progress to output/FETAL/training_logs/
+#
+# GPU Configuration:
+#   - Default: Uses GPU 0
+#   - Override: Set CUDA_VISIBLE_DEVICES environment variable
+#   - Example: CUDA_VISIBLE_DEVICES=1 ./run_all_training.sh
+#
+# Usage:
+#   ./run_all_training.sh
+#
+# Output:
+#   - Models saved in output/FETAL/<model_name>/
+#   - Training logs in output/FETAL/training_logs/
+#   - Kept files: checkpoint_199.pth, model_best.pth, final_state.pth, current_pred.pth
+# ------------------------------------------------------------------------------
 
 # GPU selection (default: GPU 0)
 # Override by setting CUDA_VISIBLE_DEVICES before running this script
@@ -57,23 +71,35 @@ echo "Output directory: $OUTPUT_DIR"
 echo "Logs directory: $LOGS_DIR"
 echo ""
 
-# Function to clean up intermediate checkpoints
+# ------------------------------------------------------------------------------
+# Function: cleanup_checkpoints
+# ------------------------------------------------------------------------------
+# Clean up intermediate checkpoints to save disk space.
+# Keeps only essential files needed for evaluation and inference.
+#
+# Args:
+#   $1: MODEL_DIR - Directory containing model checkpoints
+#   $2: MODEL_NAME - Name of the model (for logging)
+#
+# Files kept:
+#   - checkpoint_199.pth: Last epoch checkpoint (for resuming)
+#   - current_pred.pth: Predictions from last epoch
+#   - model_best.pth: Best model checkpoint (lowest validation NME)
+#   - final_state.pth: Final model state (used by run_all_tests.sh for inference)
+#
+# Files removed:
+#   - All checkpoint_*.pth except checkpoint_199.pth
+# ------------------------------------------------------------------------------
 cleanup_checkpoints() {
     local MODEL_DIR=$1
     local MODEL_NAME=$2
     
     echo "  Cleaning up intermediate checkpoints in $MODEL_DIR..."
     
-    # Keep only these files:
-    # - checkpoint_199.pth (last epoch checkpoint)
-    # - current_pred.pth (predictions from last epoch)
-    # - model_best.pth (best model checkpoint - lowest validation NME)
-    # - final_state.pth (final model state - used by run_all_tests.sh)
-    
-    # Remove all checkpoint_*.pth except checkpoint_199.pth
+    # Remove all checkpoint_*.pth except checkpoint_199.pth (last epoch)
     find "$MODEL_DIR" -name "checkpoint_*.pth" ! -name "checkpoint_199.pth" -type f -delete 2>/dev/null
     
-    # Count remaining files
+    # Count remaining files for verification
     local remaining=$(ls -1 "$MODEL_DIR"/*.pth 2>/dev/null | wc -l)
     echo "  ✓ Cleanup complete. Remaining .pth files: $remaining"
 }

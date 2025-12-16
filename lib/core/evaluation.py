@@ -10,6 +10,9 @@ import torch
 import numpy as np
 from ..utils.transforms import transform_preds
 
+EPS_INTEROCULAR = 1e-6  # avoids division-by-zero producing inf in NME
+
+
 def get_preds(scores):
     """
     Extract landmark predictions from heatmap score maps.
@@ -84,6 +87,7 @@ def compute_nme(preds, meta):
         elif L == 2: # Fetal Biometry (Diameter)
             # Distance between the two Ground Truth points
             interocular = np.linalg.norm(pts_gt[0, ] - pts_gt[1, ])
+            interocular = max(float(interocular), EPS_INTEROCULAR)
         else:
             raise ValueError('Number of landmarks is wrong')
 
@@ -138,6 +142,7 @@ def compute_l1dist(preds, meta):
             # L1 is naturally invariant because it compares length vs length
             # Compute ground truth measurement length
             interocular = np.linalg.norm(pts_gt[0, ] - pts_gt[1, ])
+            interocular = max(float(interocular), EPS_INTEROCULAR)
             # Compute predicted measurement length
             pred_length = np.linalg.norm(pts_pred[0, ] - pts_pred[1, ])
             # Absolute difference

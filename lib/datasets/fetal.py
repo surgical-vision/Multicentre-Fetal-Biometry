@@ -29,7 +29,7 @@ from PIL import Image
 import numpy as np
 from sklearn.mixture import GaussianMixture
 
-from ..utils.transforms import fliplr_joints, crop, generate_target, transform_pixel
+from ..utils.transforms import fliplr_joints, crop, generate_target, transform_pixel, get_transform
 
 
 def _flip_x_only(pts: np.ndarray, width: int) -> np.ndarray:
@@ -55,6 +55,20 @@ def _default_ref_for_metric(metric: str) -> np.ndarray:
     if m in {"OFD", "APAD"}:
         return np.array([0.0, 1.0], dtype=np.float32)
     return np.array([1.0, 0.0], dtype=np.float32)
+
+
+def _transform_pixel_float(pt, center, scale, output_size, invert=0, rot=0) -> np.ndarray:
+    """
+    Float-precision version of transform_pixel (keeps subpixel coords).
+    This is ONLY used for DOD reassignment decisions to avoid ties caused by integer rounding.
+    It does NOT change the heatmap generation path.
+    """
+    t = get_transform(center, scale, output_size, rot=rot)
+    if invert:
+        t = np.linalg.inv(t)
+    new_pt = np.array([pt[0] - 1.0, pt[1] - 1.0, 1.0], dtype=np.float32).T
+    new_pt = np.dot(t, new_pt)
+    return new_pt[:2].astype(np.float32) + 1.0
 
 
 class FetalLandmarks(data.Dataset):
@@ -217,57 +231,69 @@ class FetalLandmarks(data.Dataset):
 
         # ---- Compute heatmap-space points FIRST (rotation-aware) ----
         # Keep the existing +1 / -1 convention exactly as in the original code.
-        tpts = pts.copy()
+        # We compute:
+        #   - tpts_int: int coords for target heatmap generation (unchanged behaviour)
+        #   - tpts_flt: float coords for DOD ordering (prevents ties from integer rounding)
+        tpts_int = pts.copy()
+        tpts_flt = pts.copy()
+
         for i in range(nparts):
-            if tpts[i, 1] >= 0:
-                tpts[i, 0:2] = transform_pixel(
-                    tpts[i, 0:2] + 1, center, scale, self.output_size, rot=r
+            if tpts_int[i, 1] >= 0:
+                tpts_int[i, 0:2] = transform_pixel(
+                    tpts_int[i, 0:2] + 1, center, scale, self.output_size, rot=r
+                )
+                tpts_flt[i, 0:2] = _transform_pixel_float(
+                    tpts_flt[i, 0:2] + 1, center, scale, self.output_size, rot=r
                 )
 
-        # ---- DOD Reassignment in HEATMAP space (rotation-aware) ----
-        # Reassign landmark identities based on projection onto learned direction vector.
-        # This is done in heatmap space to account for any rotations applied during augmentation.
+        # ---- DOD reassignment in HEATMAP space (rot-aware), tie-safe ----
         if self.reassign:
             if self.d_vect is None:
                 raise ValueError("REASSIGN=True but d_vect is None")
 
-            # Transform the two prototype points (that define the direction) into heatmap space
-            # This accounts for the same transformations (rotation, scaling) applied to the image
-            d0 = transform_pixel(self.d_vect[0] + 1, center, scale, self.output_size, rot=r)
-            d1 = transform_pixel(self.d_vect[1] + 1, center, scale, self.output_size, rot=r)
-            d_vec = (d1 - d0).astype(np.float32)  # Direction vector in heatmap space
-            denom = float(np.linalg.norm(d_vec) + 1e-12)  # Normalization factor
+            # Transform the two prototype points into the SAME heatmap coordinate system (float precision)
+            d0 = _transform_pixel_float(self.d_vect[0] + 1, center, scale, self.output_size, rot=r)
+            d1 = _transform_pixel_float(self.d_vect[1] + 1, center, scale, self.output_size, rot=r)
+            d_vec = (d1 - d0).astype(np.float32)
+            denom = float(np.linalg.norm(d_vec) + 1e-12)
 
-            # Project all landmarks onto the direction vector
-            # Landmarks with smaller projection come first, larger projection comes second
-            proj = (tpts @ d_vec) / denom  # (N,) projection values
+            # Project float heatmap-space points and reorder within each pair.
+            # IMPORTANT: use a deterministic tie-breaker (<=) so we never map both points to the same index.
+            proj = (tpts_flt @ d_vec) / denom  # (N,)
 
             if proj.shape[0] % 2 != 0:
                 raise ValueError(f"Expected even number of points (pairs). Got N={proj.shape[0]}")
 
-            # Reshape to pairs and determine ordering within each pair
             proj_pairs = proj.reshape(-1, 2)  # (num_pairs, 2)
-            # For each pair, find which point has min/max projection
-            order_in_pair = np.stack(
-                (np.argmin(proj_pairs, axis=1), np.argmax(proj_pairs, axis=1)),
-                axis=1
-            )  # (num_pairs, 2) - indices within each pair
 
-            # Create remapping indices: convert pair-relative indices to global indices
+            # Tie-safe ordering:
+            # - if proj0 <= proj1 -> keep [0,1]
+            # - else -> swap [1,0]
+            keep = (proj_pairs[:, 0] <= proj_pairs[:, 1])
+
+            order_in_pair = np.zeros((proj_pairs.shape[0], 2), dtype=np.int64)
+            order_in_pair[keep, 0] = 0
+            order_in_pair[keep, 1] = 1
+            order_in_pair[~keep, 0] = 1
+            order_in_pair[~keep, 1] = 0
+
             base = (np.arange(order_in_pair.shape[0]) * 2)[:, None]
             remap = (order_in_pair + base).astype(np.int64).flatten()
 
-            # Apply the same remapping to both image-space and heatmap-space points
-            # This ensures consistency between the two coordinate systems
+            # Apply the SAME remap to:
+            #  - image-space pts (used as GT in evaluation)
+            #  - heatmap-space tpts_int (used for targets)
+            #  - float heatmap-space tpts_flt (debug/consistency)
             pts = pts[remap].reshape(-1, 2)
-            tpts = tpts[remap].reshape(-1, 2)
+            tpts_int = tpts_int[remap].reshape(-1, 2)
+            tpts_flt = tpts_flt[remap].reshape(-1, 2)
 
-        # ---- Now generate target heatmaps from reordered tpts ----
+        # ---- Now generate target heatmaps from reordered tpts_int ----
         target = np.zeros((nparts, self.output_size[0], self.output_size[1]), dtype=np.float32)
         for i in range(nparts):
-            if tpts[i, 1] >= 0:
+            if tpts_int[i, 1] >= 0:
                 target[i] = generate_target(
-                    target[i], tpts[i] - 1, self.sigma, label_type=self.label_type
+                    target[i], tpts_int[i] - 1, self.sigma, label_type=self.label_type
                 )
 
         img = img.astype(np.float32)
@@ -275,7 +301,7 @@ class FetalLandmarks(data.Dataset):
         img = img.transpose([2, 0, 1])
 
         target_t = torch.Tensor(target)
-        tpts_t = torch.Tensor(tpts)
+        tpts_t = torch.Tensor(tpts_int)
         center_t = torch.Tensor(center)
 
         meta = {

@@ -1,20 +1,33 @@
 #!/bin/bash
-'''
-Author: Chiara Di Vece (chiara.divece.20@ucl.ac.uk)
-Date: 2024-11-13
-
-This script runs all cross-validation tests for all anatomical structures and datasets.
-It assumes that the models have been trained using run_all_training.sh.
-It saves the predictions to the output directory, with the dataset name as the filename.
-It then uses the create_ucl_error_boxplots.py script to create boxplots of the errors.
-
-Usage:
-./run_all_tests.sh
-'''
+# ------------------------------------------------------------------------------
+# Author: Chiara Di Vece (chiara.divece.20@ucl.ac.uk)
+# Date: 2025-12-09
+# ------------------------------------------------------------------------------
+# This script runs all cross-validation tests for all anatomical structures and datasets.
+#
+# It performs comprehensive cross-validation testing by:
+# 1. Testing each trained model on all available test datasets
+# 2. Saving predictions with dataset-specific filenames (e.g., predictions_on_UCL.pth)
+# 3. Enabling comparison of model performance across different datasets
+#
+# Prerequisites:
+# - Models must be trained using run_all_training.sh
+# - Configuration files must exist in experiments/fetal/
+#
+# Usage:
+#   ./run_all_tests.sh
+#
+# Output:
+#   Predictions are saved in output/FETAL/<model_name>/predictions_on_<dataset>.pth
+# ------------------------------------------------------------------------------
 
 # Define the list of datasets and anatomical structures
-datasets=("FP" "HC18" "UCL" "MULTICENTRE")
+# HC18 only has brain data, so it's excluded from femur and abdomen
+datasets=("FP" "UCL" "MULTICENTRE")
 structures=("brain" "femur" "abdomen")
+
+# Add HC18 only for brain
+datasets_brain=("FP" "HC18" "UCL" "MULTICENTRE")
 
 # Define metrics for each anatomy
 declare -A anatomy_metrics
@@ -48,6 +61,13 @@ do
     echo "================================================================================"
     echo ""
     
+    # Use different dataset list for brain (includes HC18)
+    if [ "$STRUCTURE" == "brain" ]; then
+        CURRENT_DATASETS=("${datasets_brain[@]}")
+    else
+        CURRENT_DATASETS=("${datasets[@]}")
+    fi
+    
     # Get metrics for this anatomy
     metrics=(${anatomy_metrics[$STRUCTURE]})
     
@@ -55,30 +75,27 @@ do
     for METRIC in "${metrics[@]}"
     do
         # Loop over each combination of model_dataset and cfg_dataset
-        for MODEL_DATASET in "${datasets[@]}"
+        for MODEL_DATASET in "${CURRENT_DATASETS[@]}"
         do
-            for CFG_DATASET in "${datasets[@]}"
+            for CFG_DATASET in "${CURRENT_DATASETS[@]}"
             do
                 # Construct the paths for the configuration file and the model file
                 CFG_FILE="$EXPERIMENTS_DIR/fetal_landmark_hrnet_w18_${CFG_DATASET}_${STRUCTURE}_${METRIC}.yaml"
                 MODEL_DIR="$OUTPUT_DIR/fetal_landmark_hrnet_w18_${MODEL_DATASET}_${STRUCTURE}_${METRIC}"
                 MODEL_FILE="$MODEL_DIR/final_state.pth"
 
-                # Check if the configuration file exists
-                if [ -f "$CFG_FILE" ]; then
-                    echo "Using configuration file: $CFG_FILE"
-                else
-                    echo "Configuration file not found: $CFG_FILE"
+                # Skip if configuration file doesn't exist (safety check)
+                if [ ! -f "$CFG_FILE" ]; then
                     continue
                 fi
 
-                # Check if the model file exists
-                if [ -f "$MODEL_FILE" ]; then
-                    echo "Using model file: $MODEL_FILE"
-                else
-                    echo "Model file not found: $MODEL_FILE"
+                # Skip if model file doesn't exist (safety check)
+                if [ ! -f "$MODEL_FILE" ]; then
                     continue
                 fi
+
+                echo "Using configuration file: $CFG_FILE"
+                echo "Using model file: $MODEL_FILE"
 
                 # Run the test script
                 echo "--------------------------------------------------------------------------------"
@@ -86,14 +103,30 @@ do
                 echo "--------------------------------------------------------------------------------"
                 
                 # Create a unique predictions filename to avoid overwriting
+                # This ensures consistent naming even when MODEL_DATASET == CFG_DATASET
                 PREDICTIONS_FILE="$MODEL_DIR/predictions_on_${CFG_DATASET}.pth"
+                
+                # The test.py script saves predictions to a directory based on the config file
+                # (not the model directory), so we need to determine where it will be saved.
+                # Note: When MODEL_DATASET == CFG_DATASET, CFG_OUTPUT_DIR == MODEL_DIR
+                CFG_OUTPUT_DIR="$OUTPUT_DIR/fetal_landmark_hrnet_w18_${CFG_DATASET}_${STRUCTURE}_${METRIC}"
+                PREDICTIONS_SOURCE="$CFG_OUTPUT_DIR/predictions.pth"
                 
                 # Run test and save predictions with dataset-specific name
                 python tools/test.py --cfg "$CFG_FILE" --model-file "$MODEL_FILE"
                 
                 if [ $? -eq 0 ]; then
-                    # Rename the predictions.pth to dataset-specific name
-                    if [ -f "$MODEL_DIR/predictions.pth" ]; then
+                    # Look for predictions in the config-based output directory
+                    # (where test.py actually saves them)
+                    # This works for both cross-validation (MODEL_DATASET != CFG_DATASET)
+                    # and same-dataset testing (MODEL_DATASET == CFG_DATASET)
+                    if [ -f "$PREDICTIONS_SOURCE" ]; then
+                        # Move/rename predictions to dataset-specific name in model directory
+                        mv "$PREDICTIONS_SOURCE" "$PREDICTIONS_FILE"
+                        echo "✓ Test completed successfully"
+                        echo "  Predictions saved to: predictions_on_${CFG_DATASET}.pth"
+                    elif [ -f "$MODEL_DIR/predictions.pth" ]; then
+                        # Fallback: check model directory (in case test.py behavior changed)
                         mv "$MODEL_DIR/predictions.pth" "$PREDICTIONS_FILE"
                         echo "✓ Test completed successfully"
                         echo "  Predictions saved to: predictions_on_${CFG_DATASET}.pth"
