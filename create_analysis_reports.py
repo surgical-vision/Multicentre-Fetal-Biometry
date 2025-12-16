@@ -332,6 +332,9 @@ def bland_altman_plot(
     # X-axis is always pixels: mean of two pixel distances
     ax.set_xlabel("Mean of GT and Pred [pixels]", fontweight="bold")
     ax.set_ylabel(y_label, fontweight="bold")
+    
+    # Increase tick label font size
+    ax.tick_params(axis='both', which='major', labelsize=14)
 
     # Calculate y-axis span for positioning labels above lines
     span = max(abs(upper - bias), abs(bias - lower))
