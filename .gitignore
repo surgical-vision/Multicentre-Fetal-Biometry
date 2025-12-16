@@ -216,8 +216,7 @@ plots/
 hrnetv2_pretrained/
 *.swp
 *.out
-*_backup/
-*_gemini/
+*.log
 
 # IDE and OS
 .vscode
