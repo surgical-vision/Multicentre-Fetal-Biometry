@@ -5,7 +5,8 @@ Date: 2024-11-30
 This script creates boxplots showing the absolute error between clinically measured 
 and predicted biometry for the UCL test dataset in millimeters.
 
-It assumes that the predictions have been generated using run_all_tests.sh.
+The script loads trained models and runs inference directly on the px_to_mm test data,
+ensuring predictions are in the same order as the ground truth.
 
 Usage:
 python create_ucl_error_boxplots.py
@@ -16,11 +17,23 @@ This script should be run from the Multicentre-Fetal-Biometry repository root.
 import pandas as pd
 import numpy as np
 import torch
+import torch.nn as nn
+import torch.backends.cudnn as cudnn
+from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import sys
 from matplotlib import font_manager
 from pathlib import Path
+
+# Add parent directory to path to import lib modules
+sys.path.insert(0, str(Path(__file__).parent))
+
+import lib.models as models
+from lib.config import config
+from lib.datasets import get_dataset
+from lib.core import function
 
 # Get script directory to ensure correct paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -156,27 +169,117 @@ def load_ucl_test_data(measurement):
     return df
 
 
-def load_predictions(model_name, measurement):
-    """Load predictions from a trained model tested on UCL.
+def load_model_and_run_inference(model_name, measurement):
+    """Load a trained model and run inference on the UCL px_to_mm test data.
     
     Args:
         model_name: Name of the model (UCL, FP, MULTICENTRE, HC18)
         measurement: Measurement type (BPD, OFD, TAD, APAD, FL)
+    
+    Returns:
+        numpy.ndarray: Predictions in shape (n_samples, n_joints, 2)
     """
     model_folder = MODELS[model_name][measurement]
     
     if model_folder is None:
         return None
     
-    # All models tested on UCL should have predictions_on_UCL.pth
-    pred_file = output_dir / model_folder / "predictions_on_UCL.pth"
+    # Load model checkpoint first to check for d_vect
+    model_file = output_dir / model_folder / "final_state.pth"
+    if not model_file.exists():
+        # Try latest.pth as fallback
+        model_file = output_dir / model_folder / "latest.pth"
+        if not model_file.exists():
+            print(f"Warning: Model file not found for {model_name} {measurement}")
+            return None
     
-    if not pred_file.exists():
-        print(f"Warning: Predictions file not found: {pred_file}")
-        print(f"Run run_all_tests.sh to generate predictions on UCL test set")
+    payload = torch.load(model_file, map_location="cpu")
+    
+    # Extract weights and d_vect
+    learned_d_vect = None
+    if isinstance(payload, dict) and "state_dict" in payload:
+        weights = payload["state_dict"]
+        learned_d_vect = payload.get("d_vect", None)
+    else:
+        weights = payload
+    
+    # Handle d_vect: if not in checkpoint, compute from model's training data
+    anatomy = MEASUREMENTS[measurement]['anatomy']
+    csv_prefix = MEASUREMENTS[measurement]['csv_prefix']
+    
+    if learned_d_vect is None:
+        # Load the model's training config to compute d_vect from its training data
+        model_cfg_file = base_dir / "experiments" / "fetal" / f"fetal_landmark_hrnet_w18_{model_name}_{anatomy}_{measurement}.yaml"
+    
+        if model_cfg_file.exists():
+            # Save current config state (we'll restore it after computing d_vect)
+            # Load model's training config temporarily
+            config.defrost()
+            config.merge_from_file(str(model_cfg_file))
+            config.freeze()
+            
+            dataset_type = get_dataset(config)
+            dummy_train_dataset = dataset_type(config, is_train=True)
+            learned_d_vect = dummy_train_dataset.d_vect
+            print(f"Computed d_vect from {model_name} training data: {learned_d_vect}")
+        else:
+            print(f"Warning: Model config file not found: {model_cfg_file}")
+            print("Cannot compute d_vect from model's training data. This may cause issues.")
+    else:
+        if isinstance(learned_d_vect, torch.Tensor):
+            learned_d_vect = learned_d_vect.detach().cpu().numpy()
+        print(f"Loaded d_vect from checkpoint: {learned_d_vect}")
+    
+    # Load UCL config for testing (we'll modify it to use px_to_mm CSV)
+    ucl_cfg_file = base_dir / "experiments" / "fetal" / f"fetal_landmark_hrnet_w18_UCL_{anatomy}_{measurement}.yaml"
+    
+    if not ucl_cfg_file.exists():
+        print(f"Warning: UCL config file not found: {ucl_cfg_file}")
         return None
     
-    predictions = torch.load(pred_file)
+    # Load config for testing on UCL data
+    config.defrost()
+    config.merge_from_file(str(ucl_cfg_file))
+    # Modify config to use px_to_mm test CSV
+    config.DATASET.TESTSET = f'data/annotations/UCL/px_to_mm/{csv_prefix}_Test.csv'
+    config.MODEL.INIT_WEIGHTS = False
+    config.freeze()
+    
+    # Configure CuDNN
+    cudnn.benchmark = config.CUDNN.BENCHMARK
+    cudnn.deterministic = config.CUDNN.DETERMINISTIC
+    cudnn.enabled = config.CUDNN.ENABLED
+    
+    # Initialize model
+    model = models.get_face_alignment_net(config)
+    gpus = list(config.GPUS)
+    model = nn.DataParallel(model, device_ids=gpus).cuda()
+    
+    # Load weights into model
+    has_module_prefix = any(k.startswith("module.") for k in weights.keys())
+    if has_module_prefix:
+        model.load_state_dict(weights, strict=True)
+    else:
+        model.module.load_state_dict(weights, strict=True)
+    
+    # Get dataset type
+    dataset_type = get_dataset(config)
+            
+    
+    # Create test dataset with px_to_mm CSV
+    test_dataset = dataset_type(config, is_train=False, d_vect=learned_d_vect)
+    test_loader = DataLoader(
+        dataset=test_dataset,
+        batch_size=config.TEST.BATCH_SIZE_PER_GPU * len(gpus),
+        shuffle=False,
+        num_workers=config.WORKERS,
+        pin_memory=config.PIN_MEMORY
+    )
+    
+    # Run inference
+    model.eval()
+    _, _, _, predictions = function.inference(config, test_loader, model)
+    
     return predictions.numpy()  # Convert to numpy array
 
 
@@ -186,11 +289,18 @@ def calculate_errors_mm(measurement, model_name='UCL'):
     # Load ground truth data
     df = load_ucl_test_data(measurement)
     
-    # Load predictions
-    predictions = load_predictions(model_name, measurement)
+    # Load model and run inference on px_to_mm test data
+    predictions = load_model_and_run_inference(model_name, measurement)
     
     if predictions is None:
         return None
+    
+    # Verify that predictions and ground truth have the same length
+    if len(predictions) != len(df):
+        print(f"Warning: Mismatch between predictions ({len(predictions)}) and ground truth ({len(df)})")
+        min_len = min(len(predictions), len(df))
+        predictions = predictions[:min_len]
+        df = df.iloc[:min_len]
     
     # Get the landmark prefix for this measurement
     landmark_prefix = MEASUREMENTS[measurement]['landmark_prefix']
