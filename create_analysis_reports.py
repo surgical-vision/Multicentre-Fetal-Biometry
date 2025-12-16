@@ -332,30 +332,32 @@ def bland_altman_plot(
     # X-axis is always pixels: mean of two pixel distances
     ax.set_xlabel("Mean of GT and Pred [pixels]", fontweight="bold")
     ax.set_ylabel(y_label, fontweight="bold")
-    ax.grid(True, alpha=0.3)
 
+    # Calculate y-axis span for positioning labels above lines
+    span = max(abs(upper - bias), abs(bias - lower))
+    ax.set_ylim(bias - 1.25 * span, bias + 1.25 * span)
+    
+    # Position labels within frame, right above each line
     xlim = ax.get_xlim()
-    x_text = xlim[0] + 0.98 * (xlim[1] - xlim[0])
+    x_text = xlim[0] + 0.95 * (xlim[1] - xlim[0])  # 95% from left, within frame
+    y_offset = span * 0.03  # Small offset above each line (3% of span)
 
     fmt = "{:." + str(decimals) + "f}"
     ax.text(
-        x_text, bias, "mean diff: " + fmt.format(bias) + y_unit,
-        va="center", ha="left", color=color_mean, fontweight="bold", fontsize=10,
+        x_text, bias + y_offset, "mean diff: " + fmt.format(bias) + y_unit,
+        va="bottom", ha="right", color=color_mean, fontweight="bold", fontsize=10,
         bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.85, edgecolor=color_mean)
     )
     ax.text(
-        x_text, upper, "+1.96 SD: " + fmt.format(upper) + y_unit,
-        va="center", ha="left", color=color_loa, fontweight="bold", fontsize=10,
+        x_text, upper + y_offset, "+1.96 SD: " + fmt.format(upper) + y_unit,
+        va="bottom", ha="right", color=color_loa, fontweight="bold", fontsize=10,
         bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.85, edgecolor=color_loa)
     )
     ax.text(
-        x_text, lower, "-1.96 SD: " + fmt.format(lower) + y_unit,
-        va="center", ha="left", color=color_loa, fontweight="bold", fontsize=10,
+        x_text, lower + y_offset, "-1.96 SD: " + fmt.format(lower) + y_unit,
+        va="bottom", ha="right", color=color_loa, fontweight="bold", fontsize=10,
         bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.85, edgecolor=color_loa)
     )
-
-    span = max(abs(upper - bias), abs(bias - lower))
-    ax.set_ylim(bias - 1.25 * span, bias + 1.25 * span)
 
     return bias, lower, upper
 
