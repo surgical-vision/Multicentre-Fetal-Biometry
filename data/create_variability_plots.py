@@ -187,27 +187,6 @@ def maybe_read_csv(path, label):
         print(f"[WARN] Failed to read {label} CSV: {path} ({type(e).__name__}: {e})")
         return None
 
-
-def recalc_centers(df, img_dir, label):
-    if df is None or img_dir is None:
-        return df
-
-    if not os.path.isdir(img_dir):
-        print(f"[WARN] Missing {label} image dir: {img_dir}")
-        return df
-
-    print(f"Recalculating center coordinates for {label} from images...")
-    for i, row in df.iterrows():
-        img_path = os.path.join(img_dir, row["image_name"])
-        if os.path.exists(img_path):
-            img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-            if img is not None:
-                h, w = img.shape
-                df.loc[i, "center_w"] = w / 2.0
-                df.loc[i, "center_h"] = h / 2.0
-    return df
-
-
 def save_png_via_agg_buffer(fig, out_path):
     """
     Save figure as PNG without Pillow by grabbing the Agg RGBA buffer and writing with OpenCV.
@@ -230,10 +209,6 @@ def save_png_via_agg_buffer(fig, out_path):
 df_head = maybe_read_csv(config["head_csv"], "HEAD")
 df_abdomen = maybe_read_csv(config["abdomen_csv"], "ABDOMEN")
 df_femur = maybe_read_csv(config["femur_csv"], "FEMUR")
-
-df_head = recalc_centers(df_head, config["head_imgs"], "HEAD")
-df_abdomen = recalc_centers(df_abdomen, config["abdomen_imgs"], "ABDOMEN")
-df_femur = recalc_centers(df_femur, config["femur_imgs"], "FEMUR")
 
 DATASETS = {}
 if df_head is not None:
@@ -261,7 +236,13 @@ theta = np.linspace(0.0, 2 * np.pi, N, endpoint=False)
 width = (2 * np.pi) / N
 
 n_anatomies = len(DATASETS)
-fig = plt.figure(figsize=(12, 10) if n_anatomies == 3 else (12, 4 * n_anatomies))
+# Match proportions: 3 anatomies uses (12, 10), so 1 anatomy should be ~(12, 3.5) to maintain same subplot aspect ratio
+if n_anatomies == 1:
+    fig = plt.figure(figsize=(12, 10/3))  # Same width, proportional height for 1 row
+elif n_anatomies == 3:
+    fig = plt.figure(figsize=(12, 10))
+else:
+    fig = plt.figure(figsize=(12, 4 * n_anatomies))
 plt.subplots_adjust(hspace=0.4, wspace=0.4)
 
 for i, (db_type, meas_types) in enumerate(DATASETS.items()):
