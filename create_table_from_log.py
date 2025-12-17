@@ -9,14 +9,14 @@ import sys
 from collections import defaultdict
 
 # Usage:
-#   python make_table_from_log.py logfile.log > cross_data_evaluation_table.tex
+#   python create_table_from_log.py logfile.log > cross_data_evaluation_table.tex
 
 LOG = sys.argv[1] if len(sys.argv) > 1 else None
 if not LOG:
-    raise SystemExit("Usage: python make_table_from_log.py <logfile> > cross_data_evaluation_table.tex")
+    raise SystemExit("Usage: python create_table_from_log.py <logfile> > cross_data_evaluation_table.tex")
 
-TRAINS = ["FP", "HC18", "UCL", "MULTICENTRE"]
-TESTS  = ["FP", "HC18", "UCL", "MULTICENTRE"]
+TRAINS = ["FP", "HC18", "UCL", "M-C"]
+TESTS  = ["FP", "HC18", "UCL", "M-C"]
 MEAS   = ["BPD", "OFD", "APAD", "TAD", "FL"]  # columns in your table
 
 # --- Parse log ---
