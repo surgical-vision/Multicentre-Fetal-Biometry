@@ -472,7 +472,7 @@ The BiometryNet framework with Dynamic Orientation Determination (DOD) is descri
 - **Code:** Released under the [MIT LICENSE](https://github.com/surgical-vision/Fetal-Biometry-Dataset/blob/main/LICENSE).
   Permission is granted to use, copy, modify, and distribute the software for any purpose with attribution.  
 
-- **Data:** Released under the [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://github.com/surgical-vision/Fetal-Biometry-Dataset/blob/main/LICENSE-DATA) license.  
+- **Data:** Released under the [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://github.com/surgical-vision/Multicentre-Fetal-Biometry/blob/main/DATA-LICENSE) license.  
   You may share and adapt the dataset, provided that appropriate credit is given.  
 
 ---
