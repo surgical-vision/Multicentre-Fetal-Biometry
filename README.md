@@ -157,7 +157,7 @@ This code is developed using Python 3.6 and PyTorch 1.0.0 on Linux with NVIDIA G
 
 Download the data archives from the UCL Research Data Repository and extract them into the `data/` directory.
 
-> **Note**: Dataset DOI and download instructions will be added upon publication.
+> [UCL Research Data Repository](https://doi.org/10.5522/04/30819911)
 
 ### Expected Data Structure
 
