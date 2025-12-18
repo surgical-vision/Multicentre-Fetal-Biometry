@@ -1,5 +1,5 @@
 # Fetal Biometry Dataset  
-**A benchmark multi-centre multi-device dataset for landmark-based comprehensive fetal biometry**
+**A multi-centre, multi-device benchmark dataset for landmark-based comprehensive fetal biometry**
 
 ---
 
@@ -7,7 +7,7 @@
 
 Accurate fetal growth assessment from ultrasound depends on the precise measurement of biometric parameters, obtained by identifying anatomical landmarks in standard fetal planes. Manual measurement is time-consuming, operator-dependent, and sensitive to variability across scanners and acquisition sites, limiting reproducibility in both clinical and research settings.  
 
-This repository accompanies the publication *“A benchmark multi-centre multi-device dataset for landmark-based comprehensive fetal biometry”*. It provides an open-access dataset and reference code for automated fetal biometry research.  
+This repository accompanies the publication *“A multi-centre, multi-device benchmark dataset for landmark-based comprehensive fetal biometry”*. It provides an open-access dataset and reference code for automated fetal biometry research.  
 
 The dataset combines ultrasound images from **three independent sources** acquired on **seven different ultrasound devices**, all of which are annotated by experts for standard fetal biometric landmarks. It supports training and evaluation of algorithms for fetal biometry estimation, growth assessment, and cross-domain generalization.  
 
@@ -26,7 +26,7 @@ Each dataset includes 2D ultrasound standard planes and corresponding landmark a
 - **Abdomen:** transverse abdominal (TAD) and anterior–posterior abdominal (APAD) diameters  
 - **Femur:** femur length (FL)
 
-All images are de-identified. Preprocessing scripts in this repository convert images to a standard 1024 × 1024 resolution for training and evaluation.
+All images are de-identified and stored at their original variable resolutions. During training and evaluation, regions of interest are dynamically extracted and resized to 256×256 pixels via scale-aware cropping.
 
 ---
 
@@ -34,45 +34,28 @@ All images are de-identified. Preprocessing scripts in this repository convert i
 
 ```plaintext
 Multicentre-Fetal-Biometry/
-├── data/                      # Image + annotation folders (FP, HC18, UCL, MULTICENTRE)
-│   ├── annotations/           # CSV files with landmark coordinates
-│   │   ├── FP/
-│   │   ├── HC18/
-│   │   ├── UCL/
-│   │   └── MULTICENTRE/
-│   ├── images/                # Ultrasound images (PNG/JPEG)
-│   │   ├── FP/
-│   │   ├── HC18/
-│   │   ├── UCL/
-│   │   └── MULTICENTRE/
-│   ├── create_variability_plots.py  # Generate variability analysis plots
-│   ├── README-FP.md           # FP dataset documentation
-│   ├── README-HC18.md         # HC18 dataset documentation
-│   ├── README-UCL.md          # UCL dataset documentation
-│   ├── README-MULTICENTRE.md  # MULTICENTRE dataset documentation
-│   └── README-general.md      # Overview of all datasets
-├── experiments/fetal/         # Model configuration files (.yaml) for each dataset/anatomy
-├── tools/                     # Training and testing scripts
+├── data/                          # Images and annotations (see detailed structure below)
+├── experiments/fetal/             # Model configuration files (.yaml) for each dataset/anatomy
+├── tools/                         # Training and testing scripts
 │   ├── train.py
 │   └── test.py
-├── lib/                       # Model implementations and datasets
-│   ├── models/                # HRNet model architecture
-│   ├── datasets/              # Dataset loaders
-│   ├── core/                  # Training/evaluation functions
-│   └── utils/                 # Utility functions
-├── hrnetv2_pretrained/        # HRNetV2 ImageNet pretrained weights
-├── output/                    # Training outputs (checkpoints, logs)
-├── fonts/                     # Font files for visualization
-├── run_all_training.sh        # Automated script to train all models
-├── run_all_tests.sh           # Automated script for cross-validation testing
-├── create_ucl_error_boxplots.py  # Error analysis and visualization
-├── environment.yml            # Conda environment specification
-├── requirements.txt           # Additional pip requirements
-├── analysis_reports.ipynb     # Jupyter notebook for analysis
+├── lib/                           # Model implementations and datasets
+│   ├── models/                    # HRNet model architecture
+│   ├── datasets/                  # Dataset loaders
+│   ├── core/                      # Training/evaluation functions
+│   └── utils/                     # Utility functions
+├── hrnetv2_pretrained/            # HRNetV2 ImageNet pretrained weights
+├── output/                        # Training outputs (checkpoints, logs)
+├── fonts/                         # Font files for visualization
+├── run_all_training.sh            # Automated script to train all models
+├── run_all_tests.sh               # Automated script for cross-validation testing
+├── create_error_boxplots.py       # Error analysis and visualization
+├── create_bland-altman_plots.py   # Generate Bland-Altman agreement plots
+├── create_train_test_matrices.py  # Generate cross-validation heatmap matrices
+├── environment.yml                # Conda environment specification
+├── requirements.txt               # Additional pip requirements
 └── README.md
 ```
-
-- Detailed per-dataset information and annotations are in the `data/` subdirectories (see `data/README-*.md` files).
 
 ---
 
@@ -87,7 +70,7 @@ See the dataset-specific READMEs for full column descriptions per anatomy:
 - `data/README-FP.md` – Fetal Planes dataset details
 - `data/README-HC18.md` – HC18 challenge dataset details
 - `data/README-UCL.md` – UCL dataset details
-- `data/README-MULTICENTRE.md` – Combined multi-centre dataset details
+- `data/README-MULTI-CENTRE.md` – Combined multi-centre dataset details
 
 Each dataset README includes:
 - Number of subjects, images, and anatomical breakdowns
@@ -99,43 +82,41 @@ Each dataset README includes:
 
 ## Benchmark Evaluation  
 
-The dataset was benchmarked using **BiometryNet** (Avisdris *et al.*, MICCAI 2022), an HRNet-based landmark regression framework with Dynamic Orientation Determination (DOD). Results below are **Normalised Mean Error (NME) ± standard deviation**, consistent with the paper.
+The dataset was benchmarked using **BiometryNet** (Avisdris *et al.*, MICCAI 2022), an HRNet-based landmark regression framework with Dynamic Orientation Determination (DOD). We performed comprehensive cross-validation across all datasets (FP, HC18, UCL) and the combined multi-centre dataset (M-C). Results are reported as **Normalised Mean Error (NME) ± standard deviation**, where NME is unitless (measurement error normalised by inter-landmark distance).
 
-### Head Biometry – BPD and OFD
+### Comprehensive Cross-Validation Results
 
-| Train set | Test set | NME (BPD) ± STD | NME (OFD) ± STD |
-|-----------|----------|-----------------|-----------------|
-| FP        | FP       | 0.4600 ± 0.4835 | 0.4552 ± 0.4817 |
-| FP        | HC18     | 0.5637 ± 0.3572 | 0.5743 ± 0.3257 |
-| FP        | UCL      | 0.4583 ± 0.3910 | 0.4780 ± 0.3177 |
-| HC18      | FP       | 0.5731 ± 0.4002 | 0.5021 ± 0.4737 |
-| HC18      | UCL      | 0.7985 ± 0.4653 | 0.5610 ± 0.4265 |
-| UCL       | UCL      | 0.2439 ± 0.3749 | 0.2230 ± 0.3728 |
-| Ours (FP+HC18+UCL) | UCL | **0.2110 ± 0.3822** | **0.1927 ± 0.3700** |
+The table below shows cross-data evaluation results for all train–test combinations across four datasets and three anatomies. Within each training dataset block and for each biometric measurement, **bold** indicates the best (lowest) NME on each test set, and *italic* indicates the second-best.
 
-### Abdomen – APAD and TAD
+| Train | Test | BPD | OFD | APAD | TAD | FL |
+|-------|------|-----|-----|------|-----|----|
+| **FP** | FP | **0.03±0.06** | **0.03±0.05** | **0.08±0.06** | **0.08±0.06** | **0.03±0.11** |
+| | HC18 | 0.08±0.12 | 0.08±0.13 | — | — | — |
+| | UCL | 0.38±0.26 | 0.22±0.22 | 0.31±0.23 | 0.45±0.28 | 0.90±0.54 |
+| | M-C | *0.06±0.14* | *0.05±0.10* | *0.13±0.15* | *0.16±0.21* | *0.12±0.34* |
+| **HC18** | FP | *0.06±0.07* | *0.06±0.07* | — | — | — |
+| | HC18 | **0.05±0.09** | **0.04±0.08** | — | — | — |
+| | UCL | 0.15±0.16 | 0.19±0.23 | — | — | — |
+| | M-C | 0.06±0.11 | 0.07±0.11 | — | — | — |
+| **UCL** | FP | *0.10±0.11* | *0.09±0.09* | 0.17±0.13 | 0.16±0.12 | 0.07±0.18 |
+| | HC18 | 0.17±0.25 | 0.13±0.16 | — | — | — |
+| | UCL | **0.08±0.18** | **0.05±0.11** | **0.08±0.14** | **0.08±0.14** | **0.02±0.03** |
+| | M-C | 0.12±0.17 | 0.10±0.12 | *0.15±0.14* | *0.14±0.13* | *0.06±0.17* |
+| **M-C** | FP | *0.03±0.05* | **0.03±0.04** | 0.08±0.06 | 0.09±0.07 | 0.03±0.10 |
+| | HC18 | 0.05±0.08 | 0.04±0.07 | — | — | — |
+| | UCL | **0.02±0.02** | 0.03±0.11 | **0.05±0.12** | **0.05±0.12** | **0.01±0.01** |
+| | M-C | 0.04±0.07 | *0.03±0.06* | *0.07±0.08* | *0.08±0.08* | *0.03±0.09* |
 
-| Train set | Test set | NME (APAD) ± STD | NME (TAD) ± STD |
-|-----------|----------|------------------|-----------------|
-| FP        | FP       | 0.5987 ± 0.4527  | 0.6091 ± 0.4482 |
-| FP        | UCL      | 0.4041 ± 0.3800  | 0.5164 ± 0.3663 |
-| UCL       | UCL      | **0.3149 ± 0.4246** | **0.3518 ± 0.4209** |
+**Key observations:**
 
-### Femur – FL
+- **Within-dataset performance:** All models achieve excellent performance when tested on their own dataset (diagonal entries), with NME typically < 0.10
+- **Domain shift:** Significant performance degradation is observed under cross-dataset evaluation, particularly for FP→UCL and UCL→FP in femur measurements
+- **Multi-centre advantage:** The M-C model (trained on combined FP+HC18+UCL data) achieves the best or second-best performance across most test sets, demonstrating superior generalization
+- **Head biometry:** Most robust across domains, with M-C achieving 0.02±0.02 NME on UCL for BPD
+- **Abdomen biometry:** M-C models achieve 0.05±0.12 NME on UCL for both APAD and TAD
+- **Femur biometry:** Most challenging for cross-domain transfer, but M-C models achieve excellent performance (0.01±0.01 NME on UCL)
 
-| Train set | Test set | NME (FL) ± STD   |
-|-----------|----------|------------------|
-| FP        | FP       | 0.0338 ± 0.1168  |
-| UCL       | UCL      | **0.0259 ± 0.0410** |
-| FP        | UCL      | 0.8371 ± 0.4023  |
-| UCL       | FP       | 0.9839 ± 0.1007  |
-| Ours      | UCL      | 0.9994 ± 0.0060  |
-
-These results reproduce Table 2 in the paper and highlight:
-
-- Strong within-dataset performance (e.g., FP→FP, UCL→UCL)  
-- Significant performance degradation under cross-dataset evaluation (domain shift)  
-- Improved generalisation for head biometry when training on multi-centre data (“Ours”) and testing on UCL.
+**Note:** HC18 dataset contains only head measurements; therefore, no results are reported for abdomen and femur anatomies.
 
 ---
 
@@ -174,7 +155,7 @@ This code is developed using Python 3.6 and PyTorch 1.0.0 on Linux with NVIDIA G
 
 ### Obtain the Datasets
 
-Download the data archives from the UCL Research Data Repository (link to be added upon publication) and extract them into the `data/` directory.
+Download the data archives from the UCL Research Data Repository and extract them into the `data/` directory.
 
 > **Note**: Dataset DOI and download instructions will be added upon publication.
 
@@ -226,8 +207,6 @@ Multicentre-Fetal-Biometry/
 ├── experiments/fetal/       # Configuration files for each dataset/anatomy
 ├── hrnetv2_pretrained/      # HRNetV2 ImageNet pretrained weights
 ├── tools/
-│   ├── train.py             # Training script
-│   └── test.py              # Testing/evaluation script
 ├── lib/                     # Model and dataset implementations
 └── output/                  # Training outputs (checkpoints, logs)
 ```
@@ -393,18 +372,53 @@ The script:
 
 Change the dataset by editing the `DATASET` variable in the script (default: `'MULTICENTRE'`).
 
-### Error Analysis
+### Error Boxplots
 
 ```bash
-python create_ucl_error_boxplots.py
+python create_error_boxplots.py
 ```
 
-Generates boxplots showing absolute error (in millimeters) between clinically measured and predicted biometry for the UCL test dataset. This script requires predictions from `run_all_tests.sh` to be available.
+Generates boxplots showing absolute error (in millimeters) between ground truth and predicted biometry measurements. This script:
+- Supports all datasets (FP, HC18, UCL, MULTICENTRE)
+- Generates per-anatomy boxplots (head, abdomen, femur)
+- Requires predictions from trained models to be available
+- Saves plots to `output/FETAL/error_boxplots/`
+
+### Bland-Altman Analysis
+
+```bash
+python create_bland-altman_plots.py
+```
+
+Generates Bland-Altman agreement plots for within-dataset evaluation (FP on FP, UCL on UCL, HC18 on HC18). These plots show the agreement between ground truth and predicted measurements, displaying mean difference and 95% limits of agreement. Plots are saved to `output/FETAL/{DATASET}_figs/`.
+
+The script:
+- Computes mean difference and limits of agreement (mean ± 1.96×SD)
+- Generates scatter plots with regression lines
+- Applies Tukey IQR outlier filtering
+- Supports all anatomies and metrics
+- Requires predictions from trained models to be available
+
+### Cross-Validation Matrix Visualization
+
+```bash
+python create_train_test_matrices.py
+```
+
+Generates heatmap matrices showing cross-validation NME results across all train-test combinations. The output is formatted for publication with:
+- Square matrices for each metric (BPD, OFD, APAD, TAD, FL)
+- Grouped by anatomy (Head, Abdomen, Femur)
+- Shared colorbars for each anatomy group
+- Custom colormap from light to dark blue
+- Saved as `cross_data_metrics.png`
+
+This script parses the results table (LaTeX format) and generates a publication-ready figure.
 
 ### Additional Tools
 
-- **Image preprocessing:** Crop overlays, resize to 1024×1024, normalization (applied automatically during training)
-- **Data augmentation:** Standard augmentation techniques (rotation, scaling, flipping) applied during training
+- **Image preprocessing:** Dynamic scale-aware cropping to 256×256 pixels with rotation augmentation (applied automatically during training)
+- **Data augmentation:** Standard augmentation techniques (rotation ±30°, scaling ±25%, horizontal flipping) applied during training
+- **Normalization:** Pixel intensities normalized with ImageNet mean/std during data loading
 
 See individual scripts for detailed usage.
 
@@ -415,13 +429,7 @@ See individual scripts for detailed usage.
 If this dataset or code is used in your research, please cite:
 
 ```bibtex
-@article{divece2024fetal,
-  title={A benchmark multi-centre multi-device dataset for landmark-based comprehensive fetal biometry},
-  author={Di Vece, Chiara and Mao, Zhehua and Avisdris, Netanell and Dromey, Brian and Napolitano, Raffaele and Vasconcelos, Francisco and Stoyanov, Danail and Joskowicz, Leo and Bano, Sophia},
-  journal={Scientific Reports},
-  year={2024},
-  note={Dataset available at [TO BE ADDED]}
-}
+> **Note**: Dataset DOI and download instructions will be added upon publication.
 ```
 
 ---

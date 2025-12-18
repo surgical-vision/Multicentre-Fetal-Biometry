@@ -26,7 +26,7 @@ fetalbiometrydata/
 ├── HC18/               # Head Circumference 2018 challenge (806 subjects, 999 images)
 │   ├── annotations/     # Landmark annotations (CSV format)
 │   └── data/           # Ultrasound images (PNG format)
-├── MULTICENTRE/        # Multi-centre combined dataset (1,904 subjects, 4,513 images)
+├── MULTI-CENTRE/        # Multi-centre combined dataset (1,904 subjects, 4,513 images)
 │   ├── annotations/     # Landmark annotations (CSV format)
 │   └── data/           # Ultrasound images (JPEG/JPG/PNG format)
 └── UCL/                # UCL dataset (51 subjects, 424 images)
@@ -43,10 +43,10 @@ Primary subsets (as used in the Scientific Reports paper):
 | **FP**   | 2 (Spain)  | GE Voluson E6/S8/S10, Aloka Prosound             | 1,047    | 3,090  | Head (1,637), Abdomen (693), Femur (760)  |
 | **HC18** | 1 (NL)     | GE Voluson E8/730                                | 806      | 999    | Head only (999)             |
 | **UCL**  | 1 (UK)     | GE Voluson (single institutional protocol)       | 51       | 424    | Head (159), Abdomen (130), Femur (135)  |
-| **MULTICENTRE (combined)** | 3 | 7 device types                         | 1,904    | 4,513  | Head (2,795), Abdomen (823), Femur (895)             |
+| **MULTI-CENTRE (combined)** | 3 | 7 device types                         | 1,904    | 4,513  | Head (2,795), Abdomen (823), Femur (895)             |
 
 ⚠️ **Important**:  
-The **MULTICENTRE** dataset is the complete combined dataset containing all images from FP, HC18, and UCL. It represents the full **4,513 images** and **1,904 unique subjects** (4 fewer images than originally reported due to removal of images with missing metric coordinates).
+The **MULTI-CENTRE** dataset is the complete combined dataset containing all images from FP, HC18, and UCL. It represents the full **4,513 images** and **1,904 unique subjects** (4 fewer images than originally reported due to removal of images with missing metric coordinates).
 
 **Total**: 3 clinical sites, 7 device types, **1,904** unique subjects, **4,513** images.
 
@@ -132,8 +132,8 @@ Exact train/test image counts per anatomy are documented in the dataset-specific
 
 ## Usage
 
-Each subdirectory (`FP/`, `HC18/`, `UCL/`, `MULTICENTRE/`) contains a detailed README with:
-For each dataset you can also find a detailed README_`[dataset]', where `[dataset]' is (`FP/`, `HC18/`, `UCL/`, `MULTICENTRE/`) with:
+Each subdirectory (`FP/`, `HC18/`, `UCL/`, `MULTI-CENTRE/`) contains a detailed README with:
+For each dataset you can also find a detailed README_`[dataset]', where `[dataset]' is (`FP/`, `HC18/`, `UCL/`, `MULTI-CENTRE/`) with:
 
 - Dataset-specific information  
 - Device and acquisition details  
@@ -141,7 +141,7 @@ For each dataset you can also find a detailed README_`[dataset]', where `[datase
 - Notes on preprocessing and quality control  
 - Suggested use cases  
 
-The **MULTICENTRE** subset is intended for experiments focusing on cross-site/domain generalisation; for baseline experiments matching the paper, use FP, HC18, and UCL as described in the manuscript.
+The **MULTI-CENTRE** subset is intended for experiments focusing on cross-site/domain generalisation; for baseline experiments matching the paper, use FP, HC18, and UCL as described in the manuscript.
 
 
 ## License

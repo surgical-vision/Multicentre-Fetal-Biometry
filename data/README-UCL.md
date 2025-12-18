@@ -33,11 +33,7 @@ UCL/
 │   ├── Abdomen_Test.csv  # Test split
 │   ├── Femur.csv         # Complete femur annotations
 │   ├── Femur_Train.csv   # Training split
-│   ├── Femur_Test.csv    # Test split
-│   └── px_to_mm/         # Subset with pixel-to-mm conversion rates (for error analysis)
-│       ├── Head.csv, Head_Train.csv, Head_Test.csv
-│       ├── Abdomen.csv, Abdomen_Train.csv, Abdomen_Test.csv
-│       └── Femur.csv, Femur_Train.csv, Femur_Test.csv
+│   └── Femur_Test.csv    # Test split
 └── data/
     ├── Head/             # Head ultrasound images (JPEG/JPG/PNG)
     ├── Abdomen/          # Abdomen ultrasound images (JPEG/PNG)
@@ -46,13 +42,12 @@ UCL/
 
 ### Pixel-to-Millimeter Conversion Data
 
-The `px_to_mm/` subfolder contains a subset of the UCL dataset annotations that include the `px_to_mm_rate` column. This column provides the conversion factor from pixel measurements to millimeters for each image, enabling absolute error analysis in clinical units (mm).
+The `px_to_mm_rate` column provides the conversion factor from pixel measurements to millimeters for each image, enabling absolute error analysis in clinical units (mm).
 
 **Key characteristics:**
 - Contains images where pixel-to-millimeter calibration information was available
 - Includes all the same landmark coordinates as the main annotation files
 - Used specifically for error analysis scripts (e.g., `create_ucl_error_boxplots.py`)
-- **Not required for model training or testing** - the main annotation files (without `px_to_mm_rate`) are sufficient for landmark detection
 
 **Counts:**
 - **Head**: 126 images (Train: 91, Test: 35)
