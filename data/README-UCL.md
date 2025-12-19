@@ -99,12 +99,12 @@ index,image_name,scale,center_w,center_h,ofd_1_x,ofd_1_y,ofd_2_x,ofd_2_y,bpd_1_x
 **Measurements:**
 
 - **BPD (Bi-parietal Diameter)**: Transverse diameter of the fetal head  
-  - `bpd_1_x, bpd_1_y`: First landmark (left parietal bone)  
-  - `bpd_2_x, bpd_2_y`: Second landmark (right parietal bone)  
+  - `bpd_1_x, bpd_1_y`: First landmark
+  - `bpd_2_x, bpd_2_y`: Second landmark
 
 - **OFD (Occipito-frontal Diameter)**: Longitudinal diameter of the fetal head  
-  - `ofd_1_x, ofd_1_y`: First landmark (frontal bone)  
-  - `ofd_2_x, ofd_2_y`: Second landmark (occipital bone)  
+  - `ofd_1_x, ofd_1_y`: First landmark
+  - `ofd_2_x, ofd_2_y`: Second landmark  
 
 ### Abdomen Measurements (TAD and APAD)
 
@@ -119,12 +119,12 @@ index,image_name,scale,center_w,center_h,tad_1_x,tad_1_y,tad_2_x,tad_2_y,apad_1_
 **Measurements:**
 
 - **TAD (Transverse Abdominal Diameter)**: Transverse diameter across the abdomen at the level of the stomach and portal vein  
-  - `tad_1_x, tad_1_y`: First landmark (left side)  
-  - `tad_2_x, tad_2_y`: Second landmark (right side)  
+  - `tad_1_x, tad_1_y`: First landmark 
+  - `tad_2_x, tad_2_y`: Second landmark
 
 - **APAD (Anterior–Posterior Abdominal Diameter)**: Anterior–posterior diameter perpendicular to TAD  
-  - `apad_1_x, apad_1_y`: First landmark (anterior)  
-  - `apad_2_x, apad_2_y`: Second landmark (posterior)  
+  - `apad_1_x, apad_1_y`: First landmark
+  - `apad_2_x, apad_2_y`: Second landmark
 
 ### Femur Measurements (FL)
 

@@ -71,12 +71,12 @@ index,image_name,scale,center_w,center_h,ofd_1_x,ofd_1_y,ofd_2_x,ofd_2_y,bpd_1_x
 **Measurements:**
 
 - **BPD (Bi-parietal Diameter)**: Distance between the outer edges of the parietal bones
-  - `bpd_1_x, bpd_1_y`: First landmark (left parietal bone)
-  - `bpd_2_x, bpd_2_y`: Second landmark (right parietal bone)
+  - `bpd_1_x, bpd_1_y`: First landmark
+  - `bpd_2_x, bpd_2_y`: Second landmark
 
 - **OFD (Occipito-frontal Diameter)**: Maximum diameter from frontal to occipital bone
-  - `ofd_1_x, ofd_1_y`: First landmark (frontal)
-  - `ofd_2_x, ofd_2_y`: Second landmark (occipital)
+  - `ofd_1_x, ofd_1_y`: First landmark
+  - `ofd_2_x, ofd_2_y`: Second landmark
 
 **Additional Fields:**
 
