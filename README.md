@@ -429,7 +429,7 @@ See individual scripts for detailed usage.
 If this dataset or code is used in your research, please cite:
 
 ```bibtex
-> @misc{divece2025multicentremultidevicebenchmarkdataset,
+@misc{divece2025multicentremultidevicebenchmarkdataset,
       title={A multi-centre, multi-device benchmark dataset for landmark-based comprehensive fetal biometry}, 
       author={Chiara Di Vece and Zhehua Mao and Netanell Avisdris and Brian Dromey and Raffaele Napolitano and Dafna Ben Bashat and Francisco Vasconcelos and Danail Stoyanov and Leo    Joskowicz and Sophia Bano},
       year={2025},
