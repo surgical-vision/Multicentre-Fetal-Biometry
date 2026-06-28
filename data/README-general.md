@@ -20,7 +20,7 @@ The repository is organised into three **primary subsets** (as described in the 
 
 ```
 fetalbiometrydata/
-├── FP/                  # Full Protocol dataset (1,047 subjects, 3,090 images)
+├── FP/                  # Fetal Planes dataset (1,047 subjects, 3,090 images)
 │   ├── annotations/     # Landmark annotations (CSV format)
 │   └── data/           # Ultrasound images (PNG format)
 ├── HC18/               # Head Circumference 2018 challenge (806 subjects, 999 images)
