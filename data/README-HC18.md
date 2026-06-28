@@ -104,8 +104,8 @@ The 999-image HC18 subset in this repository is provided with subject-disjoint t
 
 | Split | Images | Subjects |
 |-------|--------|----------|
-| Train | (varies) | (varies) |
-| Test  | (varies) | (varies) |
+| Train | 737 |  |
+| Test  | 262 |  |
 | **Total** | **999** | **806** |
 
 ⚠️ **Important**:
