@@ -4,7 +4,7 @@ This repository contains a comprehensive, multi-centre, multi-device benchmark d
 
 ## Overview
 
-The dataset contains **4,513 de-identified ultrasound images** from **1,904 unique subjects** acquired at **three clinical sites** using **seven different ultrasound devices**. Expert anatomical landmark annotations are provided for clinically used fetal biometric measurements.
+The dataset contains **4,513 de-identified ultrasound images** from **1,904 unique subjects** acquired at **four clinical sites** using **seven different ultrasound devices**. Expert anatomical landmark annotations are provided for clinically used fetal biometric measurements.
 
 ### Biometric Measurements
 
