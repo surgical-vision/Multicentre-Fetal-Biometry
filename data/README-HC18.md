@@ -135,12 +135,11 @@ The HC18 dataset is specifically designed for head circumference estimation, whi
 
 ### Anatomical Landmarks
 
-The transventricular plane for HC measurement should include:
+The transventricular plane for HC measurement should include (per van den Heuvel et al., 2018):
 
-- Cavum septum pellucidum (CSP) anteriorly
-- Thalami in the midline
-- Ambient cisterns posteriorly
-- Smooth continuous cranial vault
+- A midline falx, interrupted in the anterior third by the cavum septi pellucidi (CSP)
+- The anterior (frontal) and posterior horns of the lateral ventricles in view
+- A smooth, continuous, symmetric cranial vault
 
 ## Original Challenge
 
