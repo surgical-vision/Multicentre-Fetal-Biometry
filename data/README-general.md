@@ -75,17 +75,17 @@ where `[Anatomy]` is one of: `Head`, `Abdomen`, or `Femur` (HC18 provides `Head`
 Image files are organised by anatomy type inside each dataset folder:
 
 - **FP**:  
-  - `FP/data/Head/Patient[ID]_Plane[N]_[M]_of_[K].png`  
-  - `FP/data/Abdomen/...`  
-  - `FP/data/FL/...` (Femur)
+  - `data/images/FP/Head/Patient[ID]_Plane[N]_[M]_of_[K].png`  
+  - `data/images/FP/Abdomen/...`  
+  - `data/images/FP/FL/...` (Femur)
 - **HC18**:  
-  - `HC18/data/Head/[ID]_HC.png` or `[ID]_[N]HC.png`
+  - `data/images/HC18/Head/[ID]_HC.png` or `[ID]_[N]HC.png`
 - **UCL**:  
-  - `UCL/data/Head/[filename].[jpeg|jpg|png]` (15 Head images converted from PNG to JPG to avoid HC18 conflicts)
-  - `UCL/data/Abdomen/[filename].[jpeg|png]`  
-  - `UCL/data/Femur/[filename].[jpeg|png]`
+  - `data/images/UCL/Head/[filename].[jpeg|jpg|png]` (15 Head images converted from PNG to JPG to avoid HC18 conflicts)
+  - `data/images/UCL/Abdomen/[filename].[jpeg|png]`  
+  - `data/images/UCL/Femur/[filename].[jpeg|png]`
 - **Multicentre**:  
-  - `Multicentre/data/[Anatomy]/[filename].[jpeg|jpg|png]` (mixed naming from FP/HC18/UCL)
+  - `data/images/MULTICENTRE/[Anatomy]/[filename].[jpeg|jpg|png]` (mixed naming from FP/HC18/UCL)
 
 ### CSV Annotation Format
 
