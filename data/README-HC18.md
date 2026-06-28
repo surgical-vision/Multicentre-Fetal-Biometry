@@ -137,8 +137,9 @@ The HC18 dataset is specifically designed for head circumference estimation, whi
 
 The transventricular plane for HC measurement should include (per van den Heuvel et al., 2018):
 
-- A midline falx, interrupted in the anterior third by the cavum septi pellucidi (CSP)
-- The anterior (frontal) and posterior horns of the lateral ventricles in view
+- A central midline falx, interrupted in the anterior third by the cavum septi pellucidi (CSP)
+- The anterior (frontal) horns of the lateral ventricles
+- The posterior horns (atria) of the lateral ventricles
 - A smooth, continuous, symmetric cranial vault
 
 ## Original Challenge
