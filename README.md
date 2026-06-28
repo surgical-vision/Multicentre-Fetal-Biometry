@@ -7,7 +7,7 @@
 
 Accurate fetal growth assessment from ultrasound depends on the precise measurement of biometric parameters, obtained by identifying anatomical landmarks in standard fetal planes. Manual measurement is time-consuming, operator-dependent, and sensitive to variability across scanners and acquisition sites, limiting reproducibility in both clinical and research settings.  
 
-This repository accompanies the publication *“A multi-centre, multi-device benchmark dataset for landmark-based comprehensive fetal biometry”*. It provides an open-access dataset and reference code for automated fetal biometry research.  
+This repository accompanies the publication *“A multicentre benchmark dataset for comprehensive landmark-based fetal ultrasound biometry”*. It provides an open-access dataset and reference code for automated fetal biometry research.  
 
 The dataset combines ultrasound images from **three independent sources** acquired on **seven different ultrasound devices**, all of which are annotated by experts for standard fetal biometric landmarks. It supports training and evaluation of algorithms for fetal biometry estimation, growth assessment, and cross-domain generalization.  
 
@@ -70,7 +70,7 @@ See the dataset-specific READMEs for full column descriptions per anatomy:
 - `data/README-FP.md` – Fetal Planes dataset details
 - `data/README-HC18.md` – HC18 challenge dataset details
 - `data/README-UCL.md` – UCL dataset details
-- `data/README-MULTI-CENTRE.md` – Combined multi-centre dataset details
+- `data/README-MULTICENTRE.md` – Combined multicentre dataset details
 
 Each dataset README includes:
 - Number of subjects, images, and anatomical breakdowns
@@ -82,7 +82,7 @@ Each dataset README includes:
 
 ## Benchmark Evaluation  
 
-The dataset was benchmarked using **BiometryNet** (Avisdris *et al.*, MICCAI 2022), an HRNet-based landmark regression framework with Dynamic Orientation Determination (DOD). We performed comprehensive cross-validation across all datasets (FP, HC18, UCL) and the combined multi-centre dataset (M-C). Results are reported as **Normalised Mean Error (NME) ± standard deviation**, where NME is unitless (measurement error normalised by inter-landmark distance).
+The dataset was benchmarked using **BiometryNet** (Avisdris *et al.*, MICCAI 2022), an HRNet-based landmark regression framework with Dynamic Orientation Determination (DOD). We performed comprehensive cross-validation across all datasets (FP, HC18, UCL) and the combined multicentre dataset (M-C). Results are reported as **Normalised Mean Error (NME) ± standard deviation**, where NME is unitless (measurement error normalised by inter-landmark distance).
 
 ### Comprehensive Cross-Validation Results
 
@@ -111,7 +111,7 @@ The table below shows cross-data evaluation results for all train–test combina
 
 - **Within-dataset performance:** All models achieve excellent performance when tested on their own dataset (diagonal entries), with NME typically < 0.10
 - **Domain shift:** Significant performance degradation is observed under cross-dataset evaluation, particularly for FP→UCL and UCL→FP in femur measurements
-- **Multi-centre advantage:** The M-C model (trained on combined FP+HC18+UCL data) achieves the best or second-best performance across most test sets, demonstrating superior generalization
+- **Multicentre advantage:** The M-C model (trained on combined FP+HC18+UCL data) achieves the best or second-best performance across most test sets, demonstrating superior generalization
 - **Head biometry:** Most robust across domains, with M-C achieving 0.02±0.02 NME on UCL for BPD
 - **Abdomen biometry:** M-C models achieve 0.05±0.12 NME on UCL for both APAD and TAD
 - **Femur biometry:** Most challenging for cross-domain transfer, but M-C models achieve excellent performance (0.01±0.01 NME on UCL)
