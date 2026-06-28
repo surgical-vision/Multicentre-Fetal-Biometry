@@ -48,7 +48,7 @@ Primary subsets (as used in the Scientific Reports paper):
 
 | Dataset   | Sites      | Devices (examples)                               | Subjects | Images | Anatomies             |
 |----------|------------|---------------------------------------------------|----------|--------|------------------------|
-| **FP**   | 2 (Spain)  | GE Voluson E6/S8/S10, Aloka Prosound             | 1,047    | 3,090  | Head (1,637), Abdomen (693), Femur (760)  |
+| **FP**   | 2 (Spain)  | GE Voluson E6/S8/S10, Aloka             | 1,047    | 3,090  | Head (1,637), Abdomen (693), Femur (760)  |
 | **HC18** | 1 (NL)     | GE Voluson E8/730                                | 806      | 999    | Head only (999)             |
 | **UCL**  | 1 (UK)     | GE Voluson (single institutional protocol)       | 51       | 424    | Head (159), Abdomen (130), Femur (135)  |
 | **MULTICENTRE (combined)** | 3 | 7 device types                         | 1,904    | 4,513  | Head (2,795), Abdomen (823), Femur (895)             |
