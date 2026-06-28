@@ -19,7 +19,7 @@ The dataset covers all major fetal biometry measurements:
 The repository is organised into three **primary subsets** (as described in the paper) and one **derived multicentre subset** for convenience:
 
 ```
-fetalbiometrydata/
+data/
 ├── images/
 │   ├── FP/                # Fetal Planes (1,047 subjects, 3,090 images; PNG)
 │   │   ├── Abdomen/
@@ -51,12 +51,12 @@ Primary subsets (as used in the Scientific Reports paper):
 | **FP**   | 2 (Spain)  | GE Voluson E6/S8/S10, Aloka             | 1,047    | 3,090  | Head (1,637), Abdomen (693), Femur (760)  |
 | **HC18** | 1 (NL)     | GE Voluson E8/730                                | 806      | 999    | Head only (999)             |
 | **UCL**  | 1 (UK)     | GE Voluson (single institutional protocol)       | 51       | 424    | Head (159), Abdomen (130), Femur (135)  |
-| **MULTICENTRE (combined)** | 3 | 7 device types                         | 1,904    | 4,513  | Head (2,795), Abdomen (823), Femur (895)             |
+| **MULTICENTRE (combined)** | 4 | 7 device types                         | 1,904    | 4,513  | Head (2,795), Abdomen (823), Femur (895)             |
 
 ⚠️ **Important**:  
 The **MULTICENTRE (M-C)** dataset is the complete combined dataset containing all images from FP, HC18, and UCL. It represents the full **4,513 images** and **1,904 unique subjects** (4 fewer images than originally reported due to removal of images with missing metric coordinates).
 
-**Total**: 3 clinical sites, 7 device types, **1,904** unique subjects, **4,513** images.
+**Total**: 4 clinical sites, 7 device types, **1,904** unique subjects, **4,513** images.
 
 ## Data Organization
 
