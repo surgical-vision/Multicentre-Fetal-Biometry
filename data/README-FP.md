@@ -13,7 +13,7 @@ The Fetal Planes (FP) dataset is the largest subset in this collection, containi
   - GE Voluson E6 (three scanners)
   - GE Voluson S8
   - GE Voluson S10
-  - Aloka Prosound (α7 or equivalent)
+  - Aloka
 - **Anatomies covered**: Head, Abdomen, Femur
 - **Image format**: PNG
 
