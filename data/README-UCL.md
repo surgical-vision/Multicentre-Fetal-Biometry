@@ -178,9 +178,9 @@ The UCL dataset follows ISUOG (International Society of Ultrasound in Obstetrics
 
 - **Plane**: Transventricular (standard head plane for HC/BPD/OFD)  
 - **Key features**:
-  - Cavum septum pellucidum (CSP)  
-  - Thalami in midline  
-  - Smooth, symmetric cranial vault  
+  - Midline falx interrupted anteriorly by the cavum septi pellucidi (CSP)
+  - Anterior (frontal) and posterior (atria) horns of the lateral ventricles
+  - Smooth, symmetric cranial vault
 - **Measurements**: BPD and OFD measured outer-to-outer
 
 ### Abdomen measurements
