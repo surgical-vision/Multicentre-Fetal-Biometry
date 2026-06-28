@@ -20,18 +20,26 @@ The repository is organised into three **primary subsets** (as described in the 
 
 ```
 fetalbiometrydata/
-├── FP/                  # Fetal Planes dataset (1,047 subjects, 3,090 images)
-│   ├── annotations/     # Landmark annotations (CSV format)
-│   └── data/           # Ultrasound images (PNG format)
-├── HC18/               # Head Circumference 2018 challenge (806 subjects, 999 images)
-│   ├── annotations/     # Landmark annotations (CSV format)
-│   └── data/           # Ultrasound images (PNG format)
-├── MULTICENTRE/        # Multicentre combined dataset (1,904 subjects, 4,513 images)
-│   ├── annotations/     # Landmark annotations (CSV format)
-│   └── data/           # Ultrasound images (JPEG/JPG/PNG format)
-└── UCL/                # UCL dataset (51 subjects, 424 images)
-    ├── annotations/     # Landmark annotations (CSV format)
-    └── data/           # Ultrasound images (JPEG/JPG/PNG format)
+├── images/
+│   ├── FP/                # Fetal Planes (1,047 subjects, 3,090 images; PNG)
+│   │   ├── Abdomen/
+│   │   ├── Femur/
+│   │   └── Head/
+│   ├── UCL/               # UCLH (51 subjects, 424 images; JPEG/JPG/PNG)
+│   │   ├── Abdomen/
+│   │   ├── Femur/
+│   │   └── Head/
+│   ├── HC18/              # Head Circumference 2018 (806 subjects, 999 images; PNG)
+│   │   └── Head/
+│   └── MULTICENTRE/       # Combined (1,904 subjects, 4,513 images; JPEG/JPG/PNG)
+│       ├── Abdomen/
+│       ├── Femur/
+│       └── Head/
+└── annotations/
+    ├── FP/                # Head.csv, Abdomen.csv, Femur.csv (+ _Train/_Test)
+    ├── UCL/
+    ├── HC18/              # Head only
+    └── MULTICENTRE/
 ```
 
 ### Dataset Characteristics (Paper Values)
