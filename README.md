@@ -426,7 +426,9 @@ See individual scripts for detailed usage.
 
 ## Citation
 
-If this dataset or code is used in your research, please cite:
+If this dataset or code is used in your research, please cite the following:
+
+### Paper
 
 ```bibtex
 @article{divece2026multicentre,
@@ -438,6 +440,18 @@ If this dataset or code is used in your research, please cite:
 }
 ```
 
+### Dataset
+
+```bibtex
+@article{divece2026multicentredataset,
+author = {Di Vece, Chiara and Mao, Zhehua and Avisdris, Netanell and Dromey, Brian and Napolitano, Raffaele and Ben Bashat, Dafna and Vasconcelos, Francisco and Stoyanov, Danail and Joskowicz, Leo and Bano, Sophia},
+title = {A multicentre benchmark dataset for comprehensive landmark-based fetal ultrasound biometry},
+year = {2025},
+month = {12},
+url = {https://rdr.ucl.ac.uk/articles/dataset/A_multi-centre_multi-device_benchmark_dataset_for_landmark-based_comprehensive_fetal_biometry/30819911},
+doi = {10.5522/04/30819911.v1}
+}
+```
 ---
 
 ## Acknowledgments
