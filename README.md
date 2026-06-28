@@ -1,5 +1,5 @@
 # Fetal Biometry Dataset  
-**A multi-centre, multi-device benchmark dataset for landmark-based comprehensive fetal biometry**
+**A multicentre benchmark dataset for comprehensive landmark-based fetal ultrasound biometry**
 
 ---
 
