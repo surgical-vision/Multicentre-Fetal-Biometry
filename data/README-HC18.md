@@ -23,8 +23,8 @@ The HC18 dataset originates from the Grand Challenge on Head Circumference (HC) 
 HC18/
 ├── annotations/
 │   ├── Head.csv       # Complete head annotations
-│   ├── Head_Train.csv # Training split (999 images)
-│   └── Head_Test.csv  # Test split (335 images)
+│   ├── Head_Train.csv # Training split (737 images)
+│   └── Head_Test.csv  # Test split (262 images)
 └── data/
     └── Head/          # Head ultrasound images
 ```
