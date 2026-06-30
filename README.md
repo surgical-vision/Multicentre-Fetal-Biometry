@@ -159,6 +159,21 @@ Download the data archives from the UCL Research Data Repository and extract the
 
 > [UCL Research Data Repository](https://doi.org/10.5522/04/30819911)
 
+### Obtain the Pretrained Models
+
+Pretrained BiometryNet (HRNet-W18) checkpoints for all dataset/anatomy combinations are provided as a release asset. They are required to reproduce the published benchmark numbers: training is **not** seeded, so retraining from scratch produces a different model (cross-domain femur length in particular is sensitive to which femoral instance the network selects and can vary substantially between runs).
+
+Download and unzip at the repository root — this creates `output/FETAL/<model>/...`:
+
+```bash
+# from the Multicentre-Fetal-Biometry/ root
+curl -L -o pretrained-models.zip \
+  https://github.com/surgical-vision/Multicentre-Fetal-Biometry/releases/download/v1.0/Multicentre-Fetal-Biometry-pretrained-models.zip
+unzip pretrained-models.zip        # -> output/FETAL/<model>/final_state.pth
+```
+
+Each model directory contains `final_state.pth` (final weights **+ learned DOD direction vector `d_vect`**, loaded by `tools/test.py`) and `model_best.pth`. See the [v1.0 release](https://github.com/surgical-vision/Multicentre-Fetal-Biometry/releases/tag/v1.0) for the full contents.
+
 ### Expected Data Structure
 
 After downloading and extracting the datasets, your directory should look like:
